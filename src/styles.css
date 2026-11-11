@@ -882,3 +882,114 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+@media (min-width: 2200px) and (min-aspect-ratio: 5 / 2) {
+  .app-shell {
+    width: calc(100% - clamp(80px, 6vw, 220px));
+    height: calc(100dvh - 64px);
+    margin: 32px auto;
+  }
+
+  .sidebar {
+    width: clamp(220px, 11vw, 300px);
+    padding-top: 30px;
+  }
+
+  .main-content {
+    max-width: none;
+    padding: 25px clamp(28px, 2.4vw, 72px) 40px;
+  }
+
+  .page-header {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+  }
+
+  .page-header .eyebrow {
+    margin-bottom: 6px;
+  }
+
+  .page-header h1 {
+    margin-bottom: 5px;
+  }
+
+  .date-toolbar {
+    margin-bottom: 16px;
+  }
+
+  .stats-row {
+    margin-bottom: 16px;
+  }
+
+  .stat {
+    padding: 11px 18px;
+  }
+
+  .panel {
+    margin-bottom: 16px;
+    padding: 16px 20px;
+  }
+
+  .section-heading {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .task-form {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .task-form .wide-field,
+  .task-form .form-actions {
+    grid-column: auto;
+  }
+
+  .task-form > label:nth-child(2) {
+    grid-column: span 2;
+  }
+
+  .task-form > label:nth-child(6) {
+    grid-column: span 4;
+  }
+
+  .task-form .form-actions {
+    grid-column: span 2;
+    align-self: end;
+  }
+
+  .board-column {
+    min-height: 34vh;
+  }
+
+  .card-stack {
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 8px 18px;
+  }
+
+  .two-column {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+
+  .column-flow {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .calendar-day {
+    min-height: clamp(62px, 8vh, 90px);
+  }
+
+  .report-lists > div {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    align-content: start;
+    column-gap: 22px;
+  }
+
+  .report-lists h3,
+  .report-lists .empty-state {
+    grid-column: 1 / -1;
+  }
+}
