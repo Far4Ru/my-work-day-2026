@@ -13,7 +13,13 @@ import {
   parseDate,
 } from "./dates";
 import { database } from "./database";
-import type { ActiveTimer, ReportPeriod, Task, TimeEntry } from "./model";
+import type {
+  ActiveTimer,
+  Board,
+  ReportPeriod,
+  Task,
+  TimeEntry,
+} from "./model";
 import { scheduleTask, unscheduleTask } from "./taskSchedule";
 import { entriesFromTimer } from "./timer";
 
@@ -93,7 +99,23 @@ function hasEditableClockTimes(entry: TimeEntry): boolean {
   return minutesBetweenTimes(entry.startTime, entry.endTime) === entry.minutes;
 }
 
-function App() {
+interface BoardContentProps {
+  board: Board;
+  boardNumber: number;
+  boardCount: number;
+  onCreateBoard: () => void;
+  onRenameBoard: (id: string, name: string) => Promise<boolean>;
+}
+
+function BoardContent({
+  board,
+  boardNumber,
+  boardCount,
+  onCreateBoard,
+  onRenameBoard,
+}: BoardContentProps) {
+  const boardDatabase = useMemo(() => database.forBoard(board.id), [board.id]);
+  const [boardNameDraft, setBoardNameDraft] = useState(board.name);
   const [view, setView] = useState<View>("tasks");
   const [selectedDate, setSelectedDate] = useState(() => dateKey(new Date()));
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -124,6 +146,23 @@ function App() {
   const currentDay = dateKey(new Date(now));
 
   useEffect(() => {
+    setBoardNameDraft(board.name);
+  }, [board.name]);
+
+  function saveBoardName(name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setBoardNameDraft(board.name);
+      return;
+    }
+    if (trimmed === board.name) return;
+
+    void onRenameBoard(board.id, trimmed).then((saved) => {
+      if (!saved) setBoardNameDraft(board.name);
+    });
+  }
+
+  useEffect(() => {
     setIsAddingDayTask(false);
     setIsAddingUnscheduledTask(false);
     setShowQuickTimeFields(false);
@@ -138,9 +177,9 @@ function App() {
 
   async function refresh() {
     const [storedTasks, storedEntries, activeTimer] = await Promise.all([
-      database.tasks(),
-      database.entries(),
-      database.activeTimer(),
+      boardDatabase.tasks(),
+      boardDatabase.entries(),
+      boardDatabase.activeTimer(),
     ]);
     setTasks(storedTasks);
     setEntries(storedEntries);
@@ -214,21 +253,21 @@ function App() {
       status,
       completedAt: status === "done" ? new Date().toISOString() : null,
     };
-    void change(() => database.saveTask(updated));
+    void change(() => boardDatabase.saveTask(updated));
   }
 
   function deleteTask(task: Task) {
     if (!window.confirm(`Удалить задачу «${task.title}»?`)) return;
-    void change(() => database.deleteTask(task.id));
+    void change(() => boardDatabase.deleteTask(task.id));
     if (taskRowDraft?.id === task.id) setTaskRowDraft(null);
   }
 
   function moveTaskToSelectedDay(task: Task) {
-    void change(() => database.saveTask(scheduleTask(task, selectedDate)));
+    void change(() => boardDatabase.saveTask(scheduleTask(task, selectedDate)));
   }
 
   function moveTaskToAnyDay(task: Task) {
-    void change(() => database.saveTask(unscheduleTask(task)));
+    void change(() => boardDatabase.saveTask(unscheduleTask(task)));
   }
 
   function addUnscheduledTask(event: React.FormEvent<HTMLFormElement>) {
@@ -249,7 +288,7 @@ function App() {
     };
 
     taskSubmitBusy.current = true;
-    void change(() => database.saveTask(task)).then((saved) => {
+    void change(() => boardDatabase.saveTask(task)).then((saved) => {
       taskSubmitBusy.current = false;
       if (saved) {
         setUnscheduledTaskTitle("");
@@ -286,19 +325,21 @@ function App() {
     taskSubmitBusy.current = true;
     const startsTimer = time !== null && "startedAt" in time;
     if (startsTimer) timerBusy.current = true;
-    void change(() => database.saveTaskWithTime(task, time)).then((saved) => {
-      taskSubmitBusy.current = false;
-      if (startsTimer) timerBusy.current = false;
-      if (saved) {
-        setQuickTaskTitle("");
-        setQuickTaskProject("");
-        setQuickTaskDueTime("");
-        setQuickTimeStart("");
-        setQuickTimeEnd("");
-        setShowQuickTimeFields(false);
-        setIsAddingDayTask(false);
-      }
-    });
+    void change(() => boardDatabase.saveTaskWithTime(task, time)).then(
+      (saved) => {
+        taskSubmitBusy.current = false;
+        if (startsTimer) timerBusy.current = false;
+        if (saved) {
+          setQuickTaskTitle("");
+          setQuickTaskProject("");
+          setQuickTaskDueTime("");
+          setQuickTimeStart("");
+          setQuickTimeEnd("");
+          setShowQuickTimeFields(false);
+          setIsAddingDayTask(false);
+        }
+      },
+    );
   }
 
   function editTaskRow(task: Task) {
@@ -346,7 +387,7 @@ function App() {
     taskSubmitBusy.current = true;
     const startsTimer = time !== null && "startedAt" in time;
     if (startsTimer) timerBusy.current = true;
-    void change(() => database.saveTaskWithTime(updated, time)).then(
+    void change(() => boardDatabase.saveTaskWithTime(updated, time)).then(
       (saved) => {
         taskSubmitBusy.current = false;
         if (startsTimer) timerBusy.current = false;
@@ -427,7 +468,7 @@ function App() {
       startTime: hasClockTimes ? entryStart : undefined,
       endTime: hasClockTimes ? entryEnd : undefined,
     };
-    void change(() => database.saveEntry(updated)).then((saved) => {
+    void change(() => boardDatabase.saveEntry(updated)).then((saved) => {
       if (saved) setEditingEntryId(null);
     });
   }
@@ -442,7 +483,7 @@ function App() {
 
   function deleteEntry(entry: TimeEntry) {
     if (!window.confirm(`Удалить запись «${entry.title}»?`)) return;
-    void change(() => database.deleteEntry(entry.id));
+    void change(() => boardDatabase.deleteEntry(entry.id));
     if (editingEntryId === entry.id) setEditingEntryId(null);
   }
 
@@ -450,7 +491,7 @@ function App() {
     if (!timer || timerBusy.current) return;
     timerBusy.current = true;
     const timerEntries = entriesFromTimer(timer, new Date());
-    void change(() => database.finishTimer(timerEntries)).then(() => {
+    void change(() => boardDatabase.finishTimer(timerEntries)).then(() => {
       timerBusy.current = false;
     });
   }
@@ -843,6 +884,37 @@ function App() {
             My Work Day<small>Личный рабочий день</small>
           </span>
         </div>
+        <div className="board-identity">
+          <span className="board-identity-label">
+            Доска {boardNumber} из {boardCount}
+          </span>
+          <div className="board-identity-row">
+            <input
+              aria-label="Название доски"
+              title="Название доски"
+              maxLength={80}
+              value={boardNameDraft}
+              onChange={(event) => setBoardNameDraft(event.target.value)}
+              onBlur={(event) => saveBoardName(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.currentTarget.blur();
+                if (event.key === "Escape") {
+                  event.currentTarget.value = board.name;
+                  setBoardNameDraft(board.name);
+                  event.currentTarget.blur();
+                }
+              }}
+            />
+            <button
+              type="button"
+              aria-label="Создать новую доску"
+              title="Создать новую доску"
+              onClick={onCreateBoard}
+            >
+              <Icon name="plus" />
+            </button>
+          </div>
+        </div>
         <nav aria-label="Основная навигация" className="navigation">
           {(
             [
@@ -1001,9 +1073,8 @@ function App() {
                         )}
                         <span className="count">
                           {
-                            dayTasks.filter(
-                              (task) => task.status === status,
-                            ).length
+                            dayTasks.filter((task) => task.status === status)
+                              .length
                           }
                         </span>
                       </h2>
@@ -1106,9 +1177,7 @@ function App() {
                               </div>
                             ),
                           )}
-                        {!dayTasks.some(
-                          (task) => task.status === status,
-                        ) &&
+                        {!dayTasks.some((task) => task.status === status) &&
                           !(status === "todo" && isAddingDayTask) && (
                             <p className="empty-column">Здесь пока пусто</p>
                           )}
@@ -1547,6 +1616,288 @@ function App() {
         )}
       </main>
     </div>
+  );
+}
+
+type CarouselDirection = -1 | 1;
+
+interface BoardTransition {
+  fromId: string;
+  toId: string;
+  direction: CarouselDirection;
+  moving: boolean;
+}
+
+function App() {
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
+  const [transition, setTransition] = useState<BoardTransition | null>(null);
+  const [boardError, setBoardError] = useState("");
+  const navigating = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void Promise.all([database.boards(), database.selectedBoardId()])
+      .then(([storedBoards, selectedId]) => {
+        if (cancelled) return;
+        setBoards(storedBoards);
+        const selectedBoard = storedBoards.find(
+          (board) => board.id === selectedId,
+        );
+        setActiveBoardId(selectedBoard?.id ?? storedBoards[0]?.id ?? null);
+      })
+      .catch(() => {
+        if (!cancelled)
+          setBoardError("Не удалось загрузить доски из IndexedDB.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!transition || transition.moving) return;
+
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        setTransition((current) =>
+          current ? { ...current, moving: true } : null,
+        );
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [transition]);
+
+  useEffect(() => {
+    if (!transition?.moving) return;
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const timeout = window.setTimeout(
+      () => {
+        setActiveBoardId(transition.toId);
+        setTransition(null);
+        navigating.current = false;
+      },
+      reducedMotion ? 0 : 720,
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [transition]);
+
+  async function renameBoard(id: string, name: string): Promise<boolean> {
+    const board = boards.find((item) => item.id === id);
+    if (!board) return false;
+
+    try {
+      const updated = { ...board, name };
+      await database.saveBoard(updated);
+      setBoards((current) =>
+        current.map((item) => (item.id === id ? updated : item)),
+      );
+      setBoardError("");
+      return true;
+    } catch {
+      setBoardError("Не удалось сохранить название доски.");
+      return false;
+    }
+  }
+
+  async function selectBoard(
+    targetId: string,
+    direction: CarouselDirection,
+  ): Promise<void> {
+    if (navigating.current || !activeBoardId || targetId === activeBoardId) {
+      return;
+    }
+
+    navigating.current = true;
+    try {
+      await database.saveSelectedBoardId(targetId);
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      setBoardError("");
+      setTransition({
+        fromId: activeBoardId,
+        toId: targetId,
+        direction,
+        moving: false,
+      });
+    } catch {
+      navigating.current = false;
+      setBoardError("Не удалось перейти на другую доску.");
+    }
+  }
+
+  async function createBoard(direction: CarouselDirection): Promise<void> {
+    if (navigating.current || !activeBoardId) return;
+
+    navigating.current = true;
+    const positions = boards.map((board) => board.position);
+    const position =
+      direction === 1 ? Math.max(...positions) + 1 : Math.min(...positions) - 1;
+    let number = boards.length + 1;
+    while (boards.some((board) => board.name === `Доска ${number}`)) {
+      number += 1;
+    }
+
+    const board: Board = {
+      id: crypto.randomUUID(),
+      name: `Доска ${number}`,
+      position,
+    };
+
+    try {
+      await database.saveBoard(board);
+      await database.saveSelectedBoardId(board.id);
+      setBoards((current) =>
+        [...current, board].sort(
+          (first, second) => first.position - second.position,
+        ),
+      );
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      setBoardError("");
+      setTransition({
+        fromId: activeBoardId,
+        toId: board.id,
+        direction,
+        moving: false,
+      });
+    } catch {
+      navigating.current = false;
+      setBoardError("Не удалось создать доску.");
+      void database
+        .boards()
+        .then(setBoards)
+        .catch(() => {});
+    }
+  }
+
+  function useEdge(direction: CarouselDirection) {
+    if (boards.length === 1) {
+      void createBoard(direction);
+      return;
+    }
+
+    const currentIndex = boards.findIndex(
+      (board) => board.id === activeBoardId,
+    );
+    const nextIndex =
+      (currentIndex + direction + boards.length) % boards.length;
+    void selectBoard(boards[nextIndex].id, direction);
+  }
+
+  const activeBoard = boards.find((board) => board.id === activeBoardId);
+  if (!activeBoard) {
+    return (
+      <div className="board-startup" role={boardError ? "alert" : "status"}>
+        {boardError || "Загрузка доски…"}
+      </div>
+    );
+  }
+
+  const visibleBoards = transition
+    ? [
+        boards.find((board) => board.id === transition.fromId),
+        boards.find((board) => board.id === transition.toId),
+      ].filter((board): board is Board => board !== undefined)
+    : [activeBoard];
+
+  return (
+    <>
+      <div className="board-carousel-stage">
+        {visibleBoards.map((board) => {
+          let motionClass = "";
+          if (transition?.fromId === board.id && transition.moving) {
+            motionClass =
+              transition.direction === 1
+                ? "board-slide--left"
+                : "board-slide--right";
+          }
+          if (transition?.toId === board.id && !transition.moving) {
+            motionClass =
+              transition.direction === 1
+                ? "board-slide--right"
+                : "board-slide--left";
+          }
+
+          return (
+            <div
+              key={board.id}
+              className={`board-slide ${motionClass}`}
+              inert={transition !== null}
+            >
+              <BoardContent
+                board={board}
+                boardNumber={
+                  boards.findIndex((item) => item.id === board.id) + 1
+                }
+                boardCount={boards.length}
+                onCreateBoard={() => void createBoard(1)}
+                onRenameBoard={renameBoard}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {([-1, 1] as const).map((direction) => {
+        const isLeft = direction === -1;
+        const hasMultipleBoards = boards.length > 1;
+        return (
+          <button
+            key={direction}
+            type="button"
+            className={`board-edge-button ${isLeft ? "board-edge-button--left" : "board-edge-button--right"}`}
+            aria-label={
+              hasMultipleBoards
+                ? isLeft
+                  ? "Предыдущая доска"
+                  : "Следующая доска"
+                : isLeft
+                  ? "Добавить доску слева"
+                  : "Добавить доску справа"
+            }
+            title={
+              hasMultipleBoards
+                ? isLeft
+                  ? "Предыдущая доска"
+                  : "Следующая доска"
+                : "Добавить доску"
+            }
+            disabled={transition !== null}
+            onClick={() => useEdge(direction)}
+          >
+            <Icon
+              name={
+                hasMultipleBoards
+                  ? isLeft
+                    ? "chevron-left"
+                    : "chevron-right"
+                  : "plus"
+              }
+            />
+          </button>
+        );
+      })}
+
+      {boardError && (
+        <div className="board-error" role="alert">
+          {boardError}
+        </div>
+      )}
+    </>
   );
 }
 

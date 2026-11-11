@@ -1,3 +1,9 @@
+export interface Board {
+  id: string;
+  name: string;
+  position: number;
+}
+
 export interface Task {
   id: string;
   title: string;
