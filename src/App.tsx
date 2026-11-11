@@ -1067,172 +1067,174 @@ function App() {
                       )}
                     </section>
                   </div>
-                </div>
-                <section className="panel calendar-time-panel">
-                  <div className="section-heading">
-                    <h2>Учёт времени</h2>
-                    <strong>{minutesLabel(dayMinutes)}</strong>
-                  </div>
-                  {timer && (
-                    <div className="hub-day-row active-time-row">
-                      <span className="time-duration">…идёт</span>
-                      <span className="hub-row-title">{timer.title}</span>
-                      {dateKeyFromTimestamp(timer.startedAt) !==
-                        selectedDate && (
-                        <span className="task-tag">
-                          {formatDate(dateKeyFromTimestamp(timer.startedAt), {
-                            day: "numeric",
-                            month: "short",
-                          })}
-                        </span>
-                      )}
-                      <small>
-                        {clockTime(new Date(timer.startedAt))}–
-                        {clockTime(new Date(now))}
-                      </small>
-                      <button
-                        className="mini-action"
-                        title="Остановить и сохранить"
-                        aria-label="Остановить таймер и сохранить время"
-                        onClick={stopTimer}
-                      >
-                        ■
-                      </button>
+                  <section className="panel calendar-time-panel">
+                    <div className="section-heading">
+                      <h2>Учёт времени</h2>
+                      <strong>{minutesLabel(dayMinutes)}</strong>
                     </div>
-                  )}
-                  <div className="calendar-time-list">
-                    {dayEntries.length === 0 && !timer && (
-                      <p className="empty-state">Записей за этот день нет.</p>
-                    )}
-                    {dayEntries.map((entry) =>
-                      editingEntryId === entry.id ? (
-                        <form
-                          className="hub-edit-row"
-                          key={entry.id}
-                          onSubmit={saveEntryEdit}
+                    {timer && (
+                      <div className="hub-day-row active-time-row">
+                        <span className="time-duration">…идёт</span>
+                        <span className="hub-row-title">{timer.title}</span>
+                        {dateKeyFromTimestamp(timer.startedAt) !==
+                          selectedDate && (
+                          <span className="task-tag">
+                            {formatDate(dateKeyFromTimestamp(timer.startedAt), {
+                              day: "numeric",
+                              month: "short",
+                            })}
+                          </span>
+                        )}
+                        <small>
+                          {clockTime(new Date(timer.startedAt))}–
+                          {clockTime(new Date(now))}
+                        </small>
+                        <button
+                          className="mini-action"
+                          title="Остановить и сохранить"
+                          aria-label="Остановить таймер и сохранить время"
+                          onClick={stopTimer}
                         >
-                          <input
-                            aria-label="Название записи"
-                            value={entryTitle}
-                            onChange={(event) =>
-                              setEntryTitle(event.target.value)
-                            }
-                            required
-                          />
-                          {hasEditableClockTimes(entry) ? (
-                            <>
-                              <input
-                                aria-label="Начало"
-                                type="time"
-                                value={entryStart}
-                                onChange={(event) =>
-                                  setEntryStart(event.target.value)
-                                }
-                                required
-                              />
-                              <input
-                                aria-label="Конец"
-                                type="time"
-                                value={entryEnd}
-                                onChange={(event) =>
-                                  setEntryEnd(event.target.value)
-                                }
-                                required
-                              />
-                            </>
-                          ) : (
+                          ■
+                        </button>
+                      </div>
+                    )}
+                    <div className="calendar-time-list">
+                      {dayEntries.length === 0 && !timer && (
+                        <p className="empty-state">Записей за этот день нет.</p>
+                      )}
+                      {dayEntries.map((entry) =>
+                        editingEntryId === entry.id ? (
+                          <form
+                            className="hub-edit-row"
+                            key={entry.id}
+                            onSubmit={saveEntryEdit}
+                          >
                             <input
-                              aria-label="Минуты старой записи"
-                              type="number"
-                              min="1"
-                              step="1"
-                              value={entryMinutes}
+                              aria-label="Название записи"
+                              value={entryTitle}
                               onChange={(event) =>
-                                setEntryMinutes(event.target.value)
+                                setEntryTitle(event.target.value)
                               }
                               required
                             />
-                          )}
-                          <button
-                            type="submit"
-                            title="Сохранить"
-                            aria-label="Сохранить запись времени"
-                          >
-                            💾
-                          </button>
-                          <button
-                            type="button"
-                            title="Отмена"
-                            aria-label="Отменить редактирование времени"
-                            onClick={() => setEditingEntryId(null)}
-                          >
-                            ✕
-                          </button>
-                        </form>
-                      ) : (
-                        <div className="hub-day-row" key={entry.id}>
-                          <span className="time-duration">
-                            {minutesLabel(entry.minutes)}
-                          </span>
-                          <span className="hub-row-title">{entry.title}</span>
-                          {entry.startTime && (
-                            <small>
-                              {entry.startTime}
-                              {entry.endTime && `–${entry.endTime}`}
-                            </small>
-                          )}
-                          <button
-                            className="mini-action"
-                            title="Редактировать"
-                            aria-label={`Редактировать запись ${entry.title}`}
-                            onClick={() => editEntry(entry)}
-                          >
-                            ✎
-                          </button>
-                          <button
-                            className="mini-action danger-text"
-                            title="Удалить"
-                            aria-label={`Удалить запись ${entry.title}`}
-                            onClick={() => deleteEntry(entry)}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                  <form className="hub-form-row" onSubmit={addCalendarTime}>
-                    <input
-                      aria-label="Чем занимались"
-                      placeholder="Чем занимались…"
-                      value={quickTimeTitle}
-                      onChange={(event) =>
-                        setQuickTimeTitle(event.target.value)
-                      }
-                      required
-                    />
-                    <input
-                      aria-label="Начало"
-                      title="начало"
-                      type="time"
-                      value={quickTimeStart}
-                      onChange={(event) =>
-                        setQuickTimeStart(event.target.value)
-                      }
-                      required
-                    />
-                    <input
-                      aria-label="Конец"
-                      title="конец (пусто = идёт)"
-                      type="time"
-                      value={quickTimeEnd}
-                      onChange={(event) => setQuickTimeEnd(event.target.value)}
-                    />
-                    <button className="primary-button" type="submit">
-                      Добавить
-                    </button>
-                  </form>
-                </section>
+                            {hasEditableClockTimes(entry) ? (
+                              <>
+                                <input
+                                  aria-label="Начало"
+                                  type="time"
+                                  value={entryStart}
+                                  onChange={(event) =>
+                                    setEntryStart(event.target.value)
+                                  }
+                                  required
+                                />
+                                <input
+                                  aria-label="Конец"
+                                  type="time"
+                                  value={entryEnd}
+                                  onChange={(event) =>
+                                    setEntryEnd(event.target.value)
+                                  }
+                                  required
+                                />
+                              </>
+                            ) : (
+                              <input
+                                aria-label="Минуты старой записи"
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={entryMinutes}
+                                onChange={(event) =>
+                                  setEntryMinutes(event.target.value)
+                                }
+                                required
+                              />
+                            )}
+                            <button
+                              type="submit"
+                              title="Сохранить"
+                              aria-label="Сохранить запись времени"
+                            >
+                              💾
+                            </button>
+                            <button
+                              type="button"
+                              title="Отмена"
+                              aria-label="Отменить редактирование времени"
+                              onClick={() => setEditingEntryId(null)}
+                            >
+                              ✕
+                            </button>
+                          </form>
+                        ) : (
+                          <div className="hub-day-row" key={entry.id}>
+                            <span className="time-duration">
+                              {minutesLabel(entry.minutes)}
+                            </span>
+                            <span className="hub-row-title">{entry.title}</span>
+                            {entry.startTime && (
+                              <small>
+                                {entry.startTime}
+                                {entry.endTime && `–${entry.endTime}`}
+                              </small>
+                            )}
+                            <button
+                              className="mini-action"
+                              title="Редактировать"
+                              aria-label={`Редактировать запись ${entry.title}`}
+                              onClick={() => editEntry(entry)}
+                            >
+                              ✎
+                            </button>
+                            <button
+                              className="mini-action danger-text"
+                              title="Удалить"
+                              aria-label={`Удалить запись ${entry.title}`}
+                              onClick={() => deleteEntry(entry)}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                    <form className="hub-form-row" onSubmit={addCalendarTime}>
+                      <input
+                        aria-label="Чем занимались"
+                        placeholder="Чем занимались…"
+                        value={quickTimeTitle}
+                        onChange={(event) =>
+                          setQuickTimeTitle(event.target.value)
+                        }
+                        required
+                      />
+                      <input
+                        aria-label="Начало"
+                        title="начало"
+                        type="time"
+                        value={quickTimeStart}
+                        onChange={(event) =>
+                          setQuickTimeStart(event.target.value)
+                        }
+                        required
+                      />
+                      <input
+                        aria-label="Конец"
+                        title="конец (пусто = идёт)"
+                        type="time"
+                        value={quickTimeEnd}
+                        onChange={(event) =>
+                          setQuickTimeEnd(event.target.value)
+                        }
+                      />
+                      <button className="primary-button" type="submit">
+                        Добавить
+                      </button>
+                    </form>
+                  </section>
+                </div>
               </div>
             )}
 
