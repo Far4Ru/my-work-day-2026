@@ -578,7 +578,7 @@ function App() {
                     </form>
                   </section>
                   {projects.length > 0 && (
-                    <div className="project-filter">
+                    <section className="panel project-filter">
                       <label>
                         Проект
                         <select
@@ -595,7 +595,7 @@ function App() {
                           ))}
                         </select>
                       </label>
-                    </div>
+                    </section>
                   )}
                 </div>
                 <div className="board">
