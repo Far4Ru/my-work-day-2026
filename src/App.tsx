@@ -69,6 +69,7 @@ function App() {
   const [timerTaskId, setTimerTaskId] = useState("");
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>("week");
   const timerBusy = useRef(false);
+  const contentRef = useRef<HTMLElement>(null);
   const currentDay = dateKey(new Date(now));
 
   useEffect(() => {
@@ -168,7 +169,7 @@ function App() {
     setEditingTaskId(task.id);
     setSelectedDate(task.date);
     setView("tasks");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function saveTask(event: React.FormEvent<HTMLFormElement>) {
@@ -247,7 +248,7 @@ function App() {
     setEditingEntryId(entry.id);
     setSelectedDate(entry.date);
     setView("time");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function deleteEntry(entry: TimeEntry) {
@@ -413,7 +414,7 @@ function App() {
         </div>
       </aside>
 
-      <main className="main-content">
+      <main className="main-content" ref={contentRef}>
         <header className="page-header">
           <div>
             <p className="eyebrow">TODO / DID</p>
