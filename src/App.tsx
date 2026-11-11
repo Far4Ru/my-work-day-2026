@@ -14,7 +14,7 @@ import { database } from "./database";
 import type { ActiveTimer, ReportPeriod, Task, TimeEntry } from "./model";
 import { entriesFromTimer } from "./timer";
 
-type View = "tasks" | "calendar" | "reports";
+type View = "tasks" | "calendar" | "statistics" | "reports";
 
 const weekDays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
@@ -580,6 +580,27 @@ function App() {
     </section>
   );
 
+  const periodTabs = (
+    <div className="period-tabs" role="group" aria-label="Период">
+      {(
+        [
+          ["day", "День"],
+          ["week", "Неделя"],
+          ["month", "Месяц"],
+          ["year", "Год"],
+        ] as const
+      ).map(([period, label]) => (
+        <button
+          key={period}
+          className={reportPeriod === period ? "active" : ""}
+          onClick={() => setReportPeriod(period)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -594,6 +615,7 @@ function App() {
             [
               ["tasks", "Задачи", "☑"],
               ["calendar", "Календарь", "▦"],
+              ["statistics", "Статистика", "◫"],
               ["reports", "Отчёты", "▤"],
             ] as const
           ).map(([key, label, icon]) => (
@@ -617,17 +639,21 @@ function App() {
                 ? "Задачи дня"
                 : view === "calendar"
                   ? "Календарь"
-                  : "Отчёт"}
+                  : view === "statistics"
+                    ? "Статистика"
+                    : "Отчёт"}
             </h1>
             <p className="subtitle">
               {view === "reports"
                 ? "Формирование отчета за период"
-                : formatDate(selectedDate, {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                : view === "statistics"
+                  ? "Итоги выбранного дня и периода"
+                  : formatDate(selectedDate, {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
             </p>
           </div>
         </header>
@@ -678,22 +704,6 @@ function App() {
             {view === "tasks" && (
               <div className="task-workspace">
                 <div className="task-workspace-left">
-                  <div className="task-workspace-controls">
-                    <div className="stats-row">
-                      <div className="stat">
-                        <span>Задач на день</span>
-                        <strong>{dayTasks.length}</strong>
-                      </div>
-                      <div className="stat">
-                        <span>Выполнено</span>
-                        <strong>{completedCount}</strong>
-                      </div>
-                      <div className="stat">
-                        <span>Учтено времени</span>
-                        <strong>{minutesLabel(dayMinutes)}</strong>
-                      </div>
-                    </div>
-                  </div>
                   {taskEditor}
                   {projects.length > 0 && (
                     <section className="panel project-filter">
@@ -1267,40 +1277,38 @@ function App() {
               </div>
             )}
 
-            {view === "reports" && (
-              <>
-                <div
-                  className="period-tabs"
-                  role="group"
-                  aria-label="Период отчёта"
-                >
-                  {(
-                    [
-                      ["day", "День"],
-                      ["week", "Неделя"],
-                      ["month", "Месяц"],
-                      ["year", "Год"],
-                    ] as const
-                  ).map(([period, label]) => (
-                    <button
-                      key={period}
-                      className={reportPeriod === period ? "active" : ""}
-                      onClick={() => setReportPeriod(period)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <section className="panel report-panel">
+            {view === "statistics" && (
+              <div className="statistics-page">
+                <section className="panel statistics-day-panel">
                   <div className="section-heading">
-                    <div>
-                      <p className="eyebrow">ИТОГИ ПЕРИОДА</p>
-                      <h2>
-                        {reportTitle(reportPeriod, reportStart, reportEnd)}
-                      </h2>
-                    </div>
-                    <button onClick={exportReport}>Скачать .md</button>
+                    <h2>
+                      {formatDate(selectedDate, {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </h2>
                   </div>
+                  <div className="stats-row">
+                    <div className="stat">
+                      <span>Задач на день</span>
+                      <strong>{dayTasks.length}</strong>
+                    </div>
+                    <div className="stat">
+                      <span>Выполнено</span>
+                      <strong>{completedCount}</strong>
+                    </div>
+                    <div className="stat">
+                      <span>Учтено времени</span>
+                      <strong>{minutesLabel(dayMinutes)}</strong>
+                    </div>
+                  </div>
+                </section>
+                <section className="panel statistics-period-panel">
+                  <div className="section-heading">
+                    <h2>{reportTitle(reportPeriod, reportStart, reportEnd)}</h2>
+                  </div>
+                  {periodTabs}
                   <div className="stats-row">
                     <div className="stat">
                       <span>Запланировано</span>
@@ -1318,6 +1326,23 @@ function App() {
                       <span>Дней с записями</span>
                       <strong>{reportDays}</strong>
                     </div>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {view === "reports" && (
+              <>
+                {periodTabs}
+                <section className="panel report-panel">
+                  <div className="section-heading">
+                    <div>
+                      <p className="eyebrow">ИТОГИ ПЕРИОДА</p>
+                      <h2>
+                        {reportTitle(reportPeriod, reportStart, reportEnd)}
+                      </h2>
+                    </div>
+                    <button onClick={exportReport}>Скачать .md</button>
                   </div>
                   <div className="report-lists">
                     <div>
