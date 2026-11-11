@@ -773,7 +773,7 @@ textarea {
 .report-markdown {
   display: block;
   width: 100%;
-  min-height: clamp(280px, 48vh, 640px);
+  min-height: clamp(280px, 40vh, 640px);
   padding: 18px 20px;
   background: #fffefa;
   border-color: #8c988e;
