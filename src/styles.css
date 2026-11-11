@@ -1169,6 +1169,7 @@ textarea {
   .sidebar {
     width: clamp(190px, 11vw, 270px);
     padding-top: 22px;
+    padding-bottom: 52px;
   }
 
   .brand {
