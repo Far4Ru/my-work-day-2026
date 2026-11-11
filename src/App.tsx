@@ -621,7 +621,7 @@ function App() {
             </h1>
             <p className="subtitle">
               {view === "reports"
-                ? "Итоги ваших задач и работы"
+                ? "Формирование отчета за период"
                 : formatDate(selectedDate, {
                     weekday: "long",
                     day: "numeric",
