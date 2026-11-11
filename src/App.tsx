@@ -330,7 +330,7 @@ function App() {
   function exportReport() {
     const title = reportTitle(reportPeriod, reportStart, reportEnd);
     const lines = [
-      `# Todo / Did — ${title}`,
+      `# My Work Day — ${title}`,
       "",
       `Период: ${reportStart} — ${reportEnd}`,
       `Запланировано задач: ${reportTasks.length}`,
