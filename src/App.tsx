@@ -738,51 +738,80 @@ function App() {
                         {visibleDayTasks
                           .filter((task) => task.status === status)
                           .map((task) => (
-                            <article
-                              className={`task-card ${status}`}
+                            <div
+                              className={`hub-day-row task-list-row ${task.status === "done" ? "is-done" : ""}`}
                               key={task.id}
                             >
-                              <h3>{task.title}</h3>
-                              {(task.project || task.dueTime) && (
-                                <div className="task-meta">
-                                  {task.project && <span>{task.project}</span>}
-                                  {task.dueTime && (
-                                    <span>до {task.dueTime}</span>
-                                  )}
-                                </div>
+                              <button
+                                className="mini-action"
+                                aria-label={
+                                  task.status === "done"
+                                    ? "Вернуть задачу в работу"
+                                    : "Отметить задачу выполненной"
+                                }
+                                title={
+                                  task.status === "done"
+                                    ? "Вернуть в работу"
+                                    : "Отметить выполненной"
+                                }
+                                onClick={() =>
+                                  setTaskStatus(
+                                    task,
+                                    task.status === "done" ? "todo" : "done",
+                                  )
+                                }
+                              >
+                                {task.status === "done" ? "↺" : "✓"}
+                              </button>
+                              <span className="hub-row-title">
+                                {task.title}
+                                {task.note && (
+                                  <small className="task-list-note">
+                                    {task.note}
+                                  </small>
+                                )}
+                              </span>
+                              {task.project && (
+                                <span className="task-tag">{task.project}</span>
                               )}
-                              {task.note && <p>{task.note}</p>}
+                              {task.dueTime && <small>🕑 {task.dueTime}</small>}
                               {task.estimateMinutes > 0 && (
-                                <span className="muted">
+                                <small>
                                   План: {minutesLabel(task.estimateMinutes)}
-                                </span>
+                                </small>
                               )}
-                              <div className="card-actions">
-                                <select
-                                  aria-label={`Статус задачи ${task.title}`}
-                                  value={task.status}
-                                  onChange={(event) =>
-                                    setTaskStatus(
-                                      task,
-                                      event.target.value as Task["status"],
-                                    )
-                                  }
-                                >
-                                  <option value="todo">Сделать</option>
-                                  <option value="doing">В работе</option>
-                                  <option value="done">Готово</option>
-                                </select>
-                                <button onClick={() => editTask(task)}>
-                                  Изменить
-                                </button>
-                                <button
-                                  className="danger-text"
-                                  onClick={() => deleteTask(task)}
-                                >
-                                  Удалить
-                                </button>
-                              </div>
-                            </article>
+                              <select
+                                className="task-status-select"
+                                aria-label={`Статус задачи ${task.title}`}
+                                value={task.status}
+                                onChange={(event) =>
+                                  setTaskStatus(
+                                    task,
+                                    event.target.value as Task["status"],
+                                  )
+                                }
+                              >
+                                <option value="todo">Сделать</option>
+                                <option value="doing">В работе</option>
+                                <option value="done">Готово</option>
+                              </select>
+                              <button
+                                className="mini-action"
+                                title="Редактировать"
+                                aria-label={`Редактировать задачу ${task.title}`}
+                                onClick={() => editTask(task)}
+                              >
+                                ✎
+                              </button>
+                              <button
+                                className="mini-action danger-text"
+                                title="Удалить"
+                                aria-label={`Удалить задачу ${task.title}`}
+                                onClick={() => deleteTask(task)}
+                              >
+                                ✕
+                              </button>
+                            </div>
                           ))}
                         {!visibleDayTasks.some(
                           (task) => task.status === status,

@@ -431,53 +431,6 @@ textarea {
   display: grid;
   gap: 10px;
 }
-.task-card {
-  min-width: 0;
-  padding: 12px 4px 16px;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px dashed #aab4a9;
-  border-radius: 0;
-  box-shadow: none;
-}
-.task-card.doing {
-  background: transparent;
-}
-.task-card.done {
-  background: transparent;
-}
-.task-card h3 {
-  margin-bottom: 8px;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-.task-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 9px;
-}
-.task-meta span {
-  padding: 3px 6px;
-  color: #617568;
-  background: #e8eee5;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-}
-.task-card.done h3 {
-  color: #79877c;
-  text-decoration: line-through;
-}
-.task-card p {
-  margin-bottom: 10px;
-  color: #65736a;
-  font-size: 13px;
-  line-height: 1.45;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-.muted,
 .empty-column,
 .empty-state {
   color: #829188;
@@ -488,31 +441,6 @@ textarea {
   padding: 19px 4px;
   text-align: center;
 }
-.card-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 13px;
-}
-.card-actions select {
-  width: auto;
-  max-width: 100%;
-  padding: 6px;
-  font-size: 12px;
-}
-.card-actions button {
-  padding: 4px;
-  color: #4b715d;
-  background: transparent;
-  border: 0;
-  font-size: 12px;
-  font-weight: 700;
-}
-.card-actions .danger-text {
-  color: #aa6359;
-}
-
 .calendar-heading h2 {
   font-size: 20px;
   text-transform: capitalize;
@@ -698,6 +626,20 @@ textarea {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+.task-list-note {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.task-list-row .task-status-select {
+  flex: none;
+  width: auto;
+  max-width: 100%;
+  padding: 5px 6px;
+  font-size: 11px;
+}
 .hub-day-row small {
   color: #7d8a80;
 }
@@ -812,9 +754,6 @@ textarea {
   .board-column {
     min-height: 0;
   }
-  .card-stack {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .report-panel .stats-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -911,9 +850,6 @@ textarea {
     font-size: 11px;
   }
   .report-lists {
-    grid-template-columns: 1fr;
-  }
-  .card-stack {
     grid-template-columns: 1fr;
   }
   .calendar-day {
@@ -1085,19 +1021,6 @@ textarea {
   .board-column h2 {
     margin-bottom: 10px;
     padding-bottom: 8px;
-    font-size: 13px;
-  }
-
-  .card-stack {
-    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-    gap: 7px 12px;
-  }
-
-  .task-card {
-    padding: 8px 3px 10px;
-  }
-
-  .task-card h3 {
     font-size: 13px;
   }
 
