@@ -84,6 +84,35 @@ export const database = {
   tasks: () => readAll<Task>("tasks"),
   entries: () => readAll<TimeEntry>("timeEntries"),
   saveTask: (task: Task) => write("tasks", task),
+  saveTaskWithTime: async (
+    task: Task,
+    time: TimeEntry | ActiveTimer | null,
+  ) => {
+    if (!time) {
+      await write("tasks", task);
+      return;
+    }
+
+    const timeStore = "startedAt" in time ? "settings" : "timeEntries";
+    const connection = await openDatabase();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const transaction = connection.transaction(
+          ["tasks", timeStore],
+          "readwrite",
+        );
+        transaction.objectStore("tasks").put(task);
+        transaction.objectStore(timeStore).put(time);
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () =>
+          reject(transaction.error ?? new Error("Не удалось сохранить задачу"));
+        transaction.onabort = () =>
+          reject(transaction.error ?? new Error("Сохранение прервано"));
+      });
+    } finally {
+      connection.close();
+    }
+  },
   saveEntry: (entry: TimeEntry) => write("timeEntries", entry),
   deleteTask: (id: string) => remove("tasks", id),
   deleteEntry: (id: string) => remove("timeEntries", id),

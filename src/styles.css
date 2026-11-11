@@ -539,37 +539,9 @@ textarea {
   align-content: start;
   gap: 22px;
 }
-.calendar-day-toolbar {
-  display: flex;
-  grid-column: 1 / -1;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 10px 14px;
-  background: #fffefa;
-  border: 1.5px solid #59645c;
-}
-.calendar-day-toolbar strong {
-  color: #35453c;
-  text-transform: capitalize;
-}
-.calendar-day-toolbar input {
-  width: 170px;
-  margin-left: auto;
-}
-.calendar-day-toolbar button {
-  min-width: 36px;
-  padding: 7px 10px;
-  color: #35453c;
-  background: #f7f8f3;
-  border: 1px solid #aab6ad;
-  border-radius: 8px;
-  font-weight: 700;
-}
 .calendar-workspace > .panel {
   margin-bottom: 0;
 }
-.hub-form-row,
 .hub-edit-row,
 .hub-day-row {
   display: flex;
@@ -580,20 +552,35 @@ textarea {
 .task-row-editor textarea {
   flex: 1 1 100%;
 }
-.hub-form-row input:first-child,
 .hub-edit-row input:first-child {
   flex: 1 1 170px;
 }
-.hub-form-row input:not(:first-child),
 .hub-edit-row input:not(:first-child) {
   flex: 1 1 105px;
 }
-.hub-form-row input,
 .hub-edit-row input {
   min-width: 0;
 }
-.hub-form-row button {
-  flex: none;
+.task-time-fields {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.task-time-fields label {
+  display: grid;
+  flex: 1 1 120px;
+  gap: 4px;
+  font-size: 12px;
+}
+.hub-edit-row .clock-button.is-active {
+  color: #fffefa;
+  background: #4b715d;
+}
+.calendar-time-section {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #aeb9af;
 }
 .hub-edit-row,
 .hub-day-row {
@@ -656,7 +643,7 @@ textarea {
   background: #edf5ea;
 }
 .calendar-time-list {
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 .report-row {
   display: flex;
@@ -989,14 +976,6 @@ textarea {
     align-items: start;
     gap: clamp(14px, 1.2vw, 28px);
   }
-
-  .calendar-panel {
-    grid-column: 1 / -1;
-  }
-
-  .calendar-time-panel {
-    grid-column: 2;
-  }
 }
 
 @media (min-width: 2100px), (min-width: 1600px) and (min-aspect-ratio: 2 / 1) {
@@ -1009,38 +988,10 @@ textarea {
   }
 }
 
-@media (min-width: 2600px) and (min-aspect-ratio: 21 / 9) {
-  .calendar-workspace {
-    grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr));
-  }
-
-  .calendar-panel {
-    grid-column: 1;
-  }
-
-  .calendar-time-panel {
-    grid-column: 3;
-  }
-}
-
-@media (min-width: 3500px) and (min-aspect-ratio: 21 / 9) {
-  .calendar-workspace {
-    grid-template-columns: minmax(650px, 1.4fr) minmax(300px, 0.7fr) minmax(
-        550px,
-        1.2fr
-      );
-  }
-
-  .calendar-panel {
-    grid-column: 1;
-  }
-
-  .calendar-tasks-panel {
-    grid-column: 2;
-  }
-
-  .calendar-time-panel {
-    grid-column: 3;
+@media (min-width: 1700px), (min-width: 1001px) and (min-aspect-ratio: 2 / 1) {
+  .board-column {
+    min-height: 25vh;
+    padding: 12px;
   }
 }
 
