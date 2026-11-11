@@ -39,6 +39,49 @@ export function mondayOf(key: string): string {
   return addDays(key, -(day === 0 ? 6 : day - 1));
 }
 
+export function isoWeekKey(key: string): string {
+  const localDate = parseDate(key);
+  const date = new Date(
+    Date.UTC(
+      localDate.getFullYear(),
+      localDate.getMonth(),
+      localDate.getDate(),
+    ),
+  );
+  const weekday = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - weekday);
+
+  const isoYear = date.getUTCFullYear();
+  const yearStart = Date.UTC(isoYear, 0, 1);
+  const daysFromYearStart = (date.getTime() - yearStart) / 86400000;
+  const week = Math.ceil((daysFromYearStart + 1) / 7);
+
+  return `${isoYear}-W${String(week).padStart(2, "0")}`;
+}
+
+export function dateFromIsoWeekKey(key: string): string | null {
+  const match = /^(\d{4})-W(\d{2})$/.exec(key);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const week = Number(match[2]);
+  if (week < 1 || week > 53) return null;
+
+  const firstThursday = new Date(Date.UTC(year, 0, 4));
+  const weekday = firstThursday.getUTCDay() || 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - weekday + 1);
+  firstThursday.setUTCDate(firstThursday.getUTCDate() + (week - 1) * 7);
+
+  const monday = dateKey(
+    new Date(
+      firstThursday.getUTCFullYear(),
+      firstThursday.getUTCMonth(),
+      firstThursday.getUTCDate(),
+    ),
+  );
+  return isoWeekKey(monday) === key ? monday : null;
+}
+
 export function minutesLabel(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const remainder = minutes % 60;

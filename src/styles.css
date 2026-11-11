@@ -233,7 +233,6 @@ h3 {
 }
 .today-button,
 .section-heading button,
-.form-actions button:not(.primary-button),
 .date-toolbar button,
 .calendar-heading button {
   padding: 9px 13px;
@@ -339,22 +338,8 @@ textarea {
   font-size: 26px;
   letter-spacing: -0.05em;
 }
-.task-form {
-  display: grid;
-  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr);
-  gap: 14px;
-}
-.task-form .wide-field,
-.task-form .form-actions {
-  grid-column: 1 / -1;
-}
 .project-filter {
-  width: 100%;
-}
-.form-actions {
-  display: flex;
-  align-items: center;
-  gap: 9px;
+  width: min(100%, 320px);
 }
 .primary-button {
   padding: 10px 15px;
@@ -412,6 +397,25 @@ textarea {
   background: #e8eee7;
   border-radius: 15px;
   font-size: 12px;
+}
+.board-add-button {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  margin-left: auto;
+  padding: 0;
+  color: #3f6957;
+  background: #f7f8f3;
+  border: 1px solid #aab6ad;
+  border-radius: 5px;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: 19px;
+  line-height: 1;
+}
+.board-add-button + .count {
+  margin-left: 0;
 }
 .card-stack {
   display: grid;
@@ -567,6 +571,9 @@ textarea {
   flex-wrap: wrap;
   gap: 8px;
 }
+.task-row-editor textarea {
+  flex: 1 1 100%;
+}
 .hub-form-row input:first-child,
 .hub-edit-row input:first-child {
   flex: 1 1 170px;
@@ -618,13 +625,6 @@ textarea {
   line-height: 1.35;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-.task-list-row .task-status-select {
-  flex: none;
-  width: auto;
-  max-width: 100%;
-  padding: 5px 6px;
-  font-size: 11px;
 }
 .hub-day-row small {
   color: #7d8a80;
@@ -849,13 +849,6 @@ textarea {
   }
 }
 @media (max-width: 430px) {
-  .task-form {
-    grid-template-columns: 1fr;
-  }
-  .task-form .wide-field,
-  .task-form .form-actions {
-    grid-column: auto;
-  }
   .calendar-day {
     min-height: 60px;
   }
@@ -915,17 +908,6 @@ textarea {
     margin-bottom: 12px;
   }
 
-  .task-workspace {
-    display: grid;
-    grid-template-columns: minmax(285px, 0.4fr) minmax(0, 1fr);
-    align-items: start;
-    gap: clamp(14px, 1.2vw, 28px);
-  }
-
-  .task-workspace-left {
-    min-width: 0;
-  }
-
   .stat {
     padding: 8px 10px;
   }
@@ -950,25 +932,6 @@ textarea {
 
   .section-heading h2 {
     font-size: 16px;
-  }
-
-  .task-form {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .task-form .wide-field,
-  .task-form .form-actions {
-    grid-column: 1 / -1;
-  }
-
-  .task-form > label:first-child {
-    grid-column: 1 / -1;
-  }
-
-  .task-form label {
-    gap: 4px;
-    font-size: 11px;
   }
 
   input,
@@ -1091,32 +1054,5 @@ textarea {
   .main-content {
     padding: clamp(42px, 5vh, 68px) clamp(58px, 4vw, 110px)
       clamp(50px, 6vh, 72px);
-  }
-}
-
-@media (min-width: 2100px) and (min-aspect-ratio: 2 / 1) {
-  .task-workspace {
-    grid-template-columns: minmax(280px, 0.38fr) minmax(0, 1fr);
-    grid-template-areas:
-      "editor board"
-      "filter board";
-  }
-
-  .task-workspace-left {
-    display: contents;
-  }
-
-  .task-editor-panel {
-    grid-area: editor;
-    margin-bottom: 0;
-  }
-
-  .project-filter {
-    grid-area: filter;
-    margin-bottom: 0;
-  }
-
-  .task-workspace .board {
-    grid-area: board;
   }
 }

@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   addDays,
   clockTime,
+  dateFromIsoWeekKey,
   dateKey,
   dateKeyFromTimestamp,
   formatDate,
+  isoWeekKey,
   minutesBetweenTimes,
   minutesLabel,
   mondayOf,
@@ -15,6 +17,10 @@ import type { ActiveTimer, ReportPeriod, Task, TimeEntry } from "./model";
 import { entriesFromTimer } from "./timer";
 
 type View = "tasks" | "calendar" | "statistics" | "reports";
+type TaskRowDraft = Pick<
+  Task,
+  "id" | "title" | "project" | "date" | "dueTime" | "note"
+> & { estimateMinutes: string };
 
 const weekDays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
@@ -59,24 +65,12 @@ function App() {
   const [now, setNow] = useState(Date.now());
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
-  const [taskTitle, setTaskTitle] = useState("");
-  const [taskProject, setTaskProject] = useState("");
-  const [taskNote, setTaskNote] = useState("");
-  const [taskDueTime, setTaskDueTime] = useState("");
-  const [taskEstimate, setTaskEstimate] = useState("");
-  const [taskDate, setTaskDate] = useState(() => dateKey(new Date()));
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [projectFilter, setProjectFilter] = useState("");
   const [quickTaskTitle, setQuickTaskTitle] = useState("");
   const [quickTaskProject, setQuickTaskProject] = useState("");
   const [quickTaskDueTime, setQuickTaskDueTime] = useState("");
-  const [calendarTaskDraft, setCalendarTaskDraft] = useState<{
-    id: string;
-    title: string;
-    project: string;
-    date: string;
-    dueTime: string;
-  } | null>(null);
+  const [isAddingBoardTask, setIsAddingBoardTask] = useState(false);
+  const [taskRowDraft, setTaskRowDraft] = useState<TaskRowDraft | null>(null);
   const [quickTimeTitle, setQuickTimeTitle] = useState("");
   const [quickTimeStart, setQuickTimeStart] = useState("");
   const [quickTimeEnd, setQuickTimeEnd] = useState("");
@@ -87,14 +81,13 @@ function App() {
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>("week");
   const timerBusy = useRef(false);
-  const taskEditorRef = useRef<HTMLElement>(null);
   const currentDay = dateKey(new Date(now));
 
   useEffect(() => {
-    if (!editingTaskId) setTaskDate(selectedDate);
-    setCalendarTaskDraft(null);
+    setIsAddingBoardTask(false);
+    setTaskRowDraft(null);
     setEditingEntryId(null);
-  }, [selectedDate, editingTaskId]);
+  }, [selectedDate]);
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
@@ -165,67 +158,12 @@ function App() {
   const calendarCompletedCount = calendarDayTasks.filter(
     (task) => task.status === "done",
   ).length;
-  const completedCount = dayTasks.filter(
-    (task) => task.status === "done",
-  ).length;
   const projects = Array.from(
     new Set(tasks.map((task) => task.project).filter(Boolean)),
   ).sort();
   const visibleDayTasks = projectFilter
     ? dayTasks.filter((task) => task.project === projectFilter)
     : dayTasks;
-
-  function resetTaskForm() {
-    setTaskTitle("");
-    setTaskProject("");
-    setTaskNote("");
-    setTaskDueTime("");
-    setTaskEstimate("");
-    setTaskDate(selectedDate);
-    setEditingTaskId(null);
-  }
-
-  function editTask(task: Task) {
-    setTaskTitle(task.title);
-    setTaskProject(task.project);
-    setTaskNote(task.note);
-    setTaskDueTime(task.dueTime);
-    setTaskEstimate(task.estimateMinutes ? String(task.estimateMinutes) : "");
-    setTaskDate(task.date);
-    setEditingTaskId(task.id);
-    setSelectedDate(task.date);
-    setView("tasks");
-    window.requestAnimationFrame(() =>
-      taskEditorRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      }),
-    );
-  }
-
-  function saveTask(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const title = taskTitle.trim();
-    if (!title) return;
-
-    const existing = tasks.find((task) => task.id === editingTaskId);
-    const task: Task = {
-      id: existing?.id ?? crypto.randomUUID(),
-      title,
-      project: taskProject.trim(),
-      note: taskNote.trim(),
-      date: taskDate,
-      dueTime: taskDueTime,
-      estimateMinutes: Math.max(0, Number(taskEstimate) || 0),
-      status: existing?.status ?? "todo",
-      createdAt: existing?.createdAt ?? new Date().toISOString(),
-      completedAt: existing?.completedAt ?? null,
-    };
-
-    void change(() => database.saveTask(task)).then((saved) => {
-      if (saved) resetTaskForm();
-    });
-  }
 
   function setTaskStatus(task: Task, status: Task["status"]) {
     const updated: Task = {
@@ -239,11 +177,10 @@ function App() {
   function deleteTask(task: Task) {
     if (!window.confirm(`Удалить задачу «${task.title}»?`)) return;
     void change(() => database.deleteTask(task.id));
-    if (editingTaskId === task.id) resetTaskForm();
-    if (calendarTaskDraft?.id === task.id) setCalendarTaskDraft(null);
+    if (taskRowDraft?.id === task.id) setTaskRowDraft(null);
   }
 
-  function addCalendarTask(event: React.FormEvent<HTMLFormElement>) {
+  function addTaskForSelectedDay(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!quickTaskTitle.trim()) return;
 
@@ -265,35 +202,45 @@ function App() {
         setQuickTaskTitle("");
         setQuickTaskProject("");
         setQuickTaskDueTime("");
+        setIsAddingBoardTask(false);
       }
     });
   }
 
-  function editCalendarTask(task: Task) {
-    setCalendarTaskDraft({
+  function editTaskRow(task: Task) {
+    setTaskRowDraft({
       id: task.id,
       title: task.title,
       project: task.project,
       date: task.date,
       dueTime: task.dueTime,
+      note: task.note,
+      estimateMinutes: task.estimateMinutes ? String(task.estimateMinutes) : "",
     });
   }
 
-  function saveCalendarTaskEdit(event: React.FormEvent<HTMLFormElement>) {
+  function saveTaskRowEdit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!calendarTaskDraft?.title.trim()) return;
-    const existing = tasks.find((task) => task.id === calendarTaskDraft.id);
+    if (!taskRowDraft?.title.trim()) return;
+    const existing = tasks.find((task) => task.id === taskRowDraft.id);
     if (!existing) return;
+    const estimateMinutes = Number(taskRowDraft.estimateMinutes || 0);
+    if (!Number.isFinite(estimateMinutes) || estimateMinutes < 0) {
+      setError("Укажите корректную оценку времени.");
+      return;
+    }
 
     const updated: Task = {
       ...existing,
-      title: calendarTaskDraft.title.trim(),
-      project: calendarTaskDraft.project.trim(),
-      date: calendarTaskDraft.date,
-      dueTime: calendarTaskDraft.dueTime,
+      title: taskRowDraft.title.trim(),
+      project: taskRowDraft.project.trim(),
+      date: taskRowDraft.date,
+      dueTime: taskRowDraft.dueTime,
+      note: taskRowDraft.note.trim(),
+      estimateMinutes: Math.round(estimateMinutes),
     };
     void change(() => database.saveTask(updated)).then((saved) => {
-      if (saved) setCalendarTaskDraft(null);
+      if (saved) setTaskRowDraft(null);
     });
   }
 
@@ -411,7 +358,10 @@ function App() {
   }
 
   function moveSelectedDate(amount: number) {
-    if (view !== "reports" || reportPeriod === "day") {
+    if (
+      (view !== "reports" && view !== "statistics") ||
+      reportPeriod === "day"
+    ) {
       setSelectedDate(addDays(selectedDate, amount));
       return;
     }
@@ -506,78 +456,80 @@ function App() {
     );
   }
 
-  const taskEditor = (
-    <section className="panel task-editor-panel" ref={taskEditorRef}>
-      <div className="section-heading">
-        <h2>{editingTaskId ? "Редактировать задачу" : "Новая задача"}</h2>
-      </div>
-      <form onSubmit={saveTask} className="task-form">
-        <label>
-          Дата задачи
-          <input
-            type="date"
-            value={taskDate}
-            onChange={(event) => setTaskDate(event.target.value)}
-            required
-          />
-        </label>
-        <label className="wide-field">
-          Название
-          <input
-            value={taskTitle}
-            onChange={(event) => setTaskTitle(event.target.value)}
-            placeholder="Что нужно сделать?"
-            required
-          />
-        </label>
-        <label>
-          Проект
-          <input
-            value={taskProject}
-            onChange={(event) => setTaskProject(event.target.value)}
-            placeholder="Необязательно"
-          />
-        </label>
-        <label>
-          Время срока
-          <input
-            type="time"
-            value={taskDueTime}
-            onChange={(event) => setTaskDueTime(event.target.value)}
-          />
-        </label>
-        <label>
-          План, минут
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value={taskEstimate}
-            onChange={(event) => setTaskEstimate(event.target.value)}
-            placeholder="Необязательно"
-          />
-        </label>
-        <label className="wide-field">
-          Заметка
-          <textarea
-            value={taskNote}
-            onChange={(event) => setTaskNote(event.target.value)}
-            placeholder="Детали задачи"
-            rows={2}
-          />
-        </label>
-        <div className="form-actions">
-          <button type="submit" className="primary-button">
-            {editingTaskId ? "Сохранить" : "Добавить задачу"}
-          </button>
-          {editingTaskId && (
-            <button type="button" onClick={resetTaskForm}>
-              Отмена
-            </button>
-          )}
-        </div>
-      </form>
-    </section>
+  const taskRowEditor = taskRowDraft && (
+    <form
+      className="hub-edit-row task-row-editor"
+      key={taskRowDraft.id}
+      onSubmit={saveTaskRowEdit}
+    >
+      <input
+        aria-label="Название задачи"
+        value={taskRowDraft.title}
+        onChange={(event) =>
+          setTaskRowDraft({ ...taskRowDraft, title: event.target.value })
+        }
+        required
+      />
+      <input
+        aria-label="Проект"
+        placeholder="проект"
+        value={taskRowDraft.project}
+        onChange={(event) =>
+          setTaskRowDraft({ ...taskRowDraft, project: event.target.value })
+        }
+      />
+      <input
+        aria-label="Дата задачи"
+        type="date"
+        value={taskRowDraft.date}
+        onChange={(event) =>
+          setTaskRowDraft({ ...taskRowDraft, date: event.target.value })
+        }
+        required
+      />
+      <input
+        aria-label="Время дедлайна"
+        type="time"
+        value={taskRowDraft.dueTime}
+        onChange={(event) =>
+          setTaskRowDraft({ ...taskRowDraft, dueTime: event.target.value })
+        }
+      />
+      <textarea
+        aria-label="Заметка"
+        placeholder="Заметка"
+        value={taskRowDraft.note}
+        onChange={(event) =>
+          setTaskRowDraft({ ...taskRowDraft, note: event.target.value })
+        }
+        rows={2}
+      />
+      <input
+        aria-label="План, минут"
+        placeholder="План, минут"
+        type="number"
+        min="0"
+        step="1"
+        value={taskRowDraft.estimateMinutes}
+        onChange={(event) =>
+          setTaskRowDraft({
+            ...taskRowDraft,
+            estimateMinutes: event.target.value,
+          })
+        }
+      />
+      <button type="submit" title="Сохранить" aria-label="Сохранить задачу">
+        💾
+      </button>
+      <button
+        type="button"
+        title="Отмена"
+        aria-label="Отменить редактирование задачи"
+        onClick={() => setTaskRowDraft(null)}
+      >
+        ✕
+      </button>
+    </form>
   );
 
   const periodTabs = (
@@ -647,7 +599,7 @@ function App() {
               {view === "reports"
                 ? "Формирование отчета за период"
                 : view === "statistics"
-                  ? "Итоги выбранного дня и периода"
+                  ? "Показатели за выбранный период"
                   : formatDate(selectedDate, {
                       weekday: "long",
                       day: "numeric",
@@ -676,15 +628,63 @@ function App() {
                   ‹
                 </button>
                 <label>
-                  Дата{" "}
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(event) => {
-                      if (event.target.value)
-                        setSelectedDate(event.target.value);
-                    }}
-                  />
+                  {view === "tasks"
+                    ? "Дата"
+                    : reportPeriod === "day"
+                      ? "День"
+                      : reportPeriod === "week"
+                        ? "Неделя"
+                        : reportPeriod === "month"
+                          ? "Месяц"
+                          : "Год"}
+                  {view === "tasks" || reportPeriod === "day" ? (
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(event) => {
+                        if (event.target.value)
+                          setSelectedDate(event.target.value);
+                      }}
+                    />
+                  ) : reportPeriod === "week" ? (
+                    <input
+                      type="week"
+                      value={isoWeekKey(selectedDate)}
+                      onChange={(event) => {
+                        const monday = dateFromIsoWeekKey(event.target.value);
+                        if (monday) setSelectedDate(monday);
+                      }}
+                    />
+                  ) : reportPeriod === "month" ? (
+                    <input
+                      type="month"
+                      value={selectedDate.slice(0, 7)}
+                      onChange={(event) => {
+                        if (event.target.value)
+                          setSelectedDate(`${event.target.value}-01`);
+                      }}
+                    />
+                  ) : (
+                    <input
+                      key={selectedDate.slice(0, 4)}
+                      type="number"
+                      min="1000"
+                      max="9999"
+                      step="1"
+                      defaultValue={selectedDate.slice(0, 4)}
+                      onBlur={(event) => {
+                        const year = event.target.value;
+                        if (/^\d{4}$/.test(year) && Number(year) >= 1000) {
+                          setSelectedDate(`${year}-01-01`);
+                        } else {
+                          event.currentTarget.value = selectedDate.slice(0, 4);
+                        }
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") event.currentTarget.blur();
+                      }}
+                    />
+                  )}
                 </label>
                 <button
                   aria-label="Следующий период"
@@ -703,29 +703,26 @@ function App() {
 
             {view === "tasks" && (
               <div className="task-workspace">
-                <div className="task-workspace-left">
-                  {taskEditor}
-                  {projects.length > 0 && (
-                    <section className="panel project-filter">
-                      <label>
-                        Проект
-                        <select
-                          value={projectFilter}
-                          onChange={(event) =>
-                            setProjectFilter(event.target.value)
-                          }
-                        >
-                          <option value="">Все проекты</option>
-                          {projects.map((project) => (
-                            <option value={project} key={project}>
-                              {project}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </section>
-                  )}
-                </div>
+                {projects.length > 0 && (
+                  <section className="panel project-filter">
+                    <label>
+                      Проект
+                      <select
+                        value={projectFilter}
+                        onChange={(event) =>
+                          setProjectFilter(event.target.value)
+                        }
+                      >
+                        <option value="">Все проекты</option>
+                        {projects.map((project) => (
+                          <option value={project} key={project}>
+                            {project}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </section>
+                )}
                 <div className="board">
                   {(["todo", "doing", "done"] as const).map((status) => (
                     <section className="board-column" key={status}>
@@ -736,6 +733,19 @@ function App() {
                           : status === "doing"
                             ? "В работе"
                             : "Готово"}{" "}
+                        {status === "todo" && (
+                          <button
+                            className="board-add-button"
+                            aria-label="Добавить задачу на выбранный день"
+                            title="Добавить задачу"
+                            onClick={() => {
+                              setQuickTaskProject(projectFilter);
+                              setIsAddingBoardTask((isAdding) => !isAdding);
+                            }}
+                          >
+                            +
+                          </button>
+                        )}
                         <span className="count">
                           {
                             visibleDayTasks.filter(
@@ -745,87 +755,151 @@ function App() {
                         </span>
                       </h2>
                       <div className="card-stack">
+                        {status === "todo" && isAddingBoardTask && (
+                          <form
+                            className="hub-edit-row"
+                            onSubmit={addTaskForSelectedDay}
+                          >
+                            <input
+                              aria-label="Название новой задачи"
+                              placeholder="Новая задача…"
+                              value={quickTaskTitle}
+                              onChange={(event) =>
+                                setQuickTaskTitle(event.target.value)
+                              }
+                              autoFocus
+                              required
+                            />
+                            <input
+                              aria-label="Проект новой задачи"
+                              placeholder="проект"
+                              value={quickTaskProject}
+                              onChange={(event) =>
+                                setQuickTaskProject(event.target.value)
+                              }
+                            />
+                            <input
+                              aria-label="Время дедлайна новой задачи"
+                              type="time"
+                              value={quickTaskDueTime}
+                              onChange={(event) =>
+                                setQuickTaskDueTime(event.target.value)
+                              }
+                            />
+                            <button
+                              type="submit"
+                              title="Добавить"
+                              aria-label="Добавить задачу"
+                            >
+                              💾
+                            </button>
+                            <button
+                              type="button"
+                              title="Отмена"
+                              aria-label="Отменить добавление задачи"
+                              onClick={() => setIsAddingBoardTask(false)}
+                            >
+                              ✕
+                            </button>
+                          </form>
+                        )}
                         {visibleDayTasks
                           .filter((task) => task.status === status)
-                          .map((task) => (
-                            <div
-                              className={`hub-day-row task-list-row ${task.status === "done" ? "is-done" : ""}`}
-                              key={task.id}
-                            >
-                              <button
-                                className="mini-action"
-                                aria-label={
-                                  task.status === "done"
-                                    ? "Вернуть задачу в работу"
-                                    : "Отметить задачу выполненной"
-                                }
-                                title={
-                                  task.status === "done"
-                                    ? "Вернуть в работу"
-                                    : "Отметить выполненной"
-                                }
-                                onClick={() =>
-                                  setTaskStatus(
-                                    task,
-                                    task.status === "done" ? "todo" : "done",
-                                  )
-                                }
+                          .map((task) =>
+                            taskRowDraft?.id === task.id ? (
+                              taskRowEditor
+                            ) : (
+                              <div
+                                className={`hub-day-row ${task.status === "done" ? "is-done" : ""}`}
+                                key={task.id}
                               >
-                                {task.status === "done" ? "↺" : "✓"}
-                              </button>
-                              <span className="hub-row-title">
-                                {task.title}
-                                {task.note && (
-                                  <small className="task-list-note">
-                                    {task.note}
+                                <button
+                                  className="mini-action"
+                                  aria-label={
+                                    task.status === "done"
+                                      ? `Вернуть задачу ${task.title} в работу`
+                                      : task.status === "todo"
+                                        ? `Перевести задачу ${task.title} в работу`
+                                        : `Вернуть задачу ${task.title} в список сделать`
+                                  }
+                                  title={
+                                    task.status === "done"
+                                      ? "Вернуть в работу"
+                                      : task.status === "todo"
+                                        ? "В работу"
+                                        : "Вернуть в сделать"
+                                  }
+                                  onClick={() =>
+                                    setTaskStatus(
+                                      task,
+                                      task.status === "doing"
+                                        ? "todo"
+                                        : "doing",
+                                    )
+                                  }
+                                >
+                                  {task.status === "done"
+                                    ? "↺"
+                                    : task.status === "todo"
+                                      ? "→"
+                                      : "←"}
+                                </button>
+                                {task.status !== "done" && (
+                                  <button
+                                    className="mini-action"
+                                    title="Отметить выполненной"
+                                    aria-label={`Отметить задачу ${task.title} выполненной`}
+                                    onClick={() => setTaskStatus(task, "done")}
+                                  >
+                                    ✓
+                                  </button>
+                                )}
+                                <span className="hub-row-title">
+                                  {task.title}
+                                  {task.note && (
+                                    <small className="task-list-note">
+                                      {task.note}
+                                    </small>
+                                  )}
+                                </span>
+                                {task.project && (
+                                  <span className="task-tag">
+                                    {task.project}
+                                  </span>
+                                )}
+                                {task.dueTime && (
+                                  <small>🕑 {task.dueTime}</small>
+                                )}
+                                {task.estimateMinutes > 0 && (
+                                  <small>
+                                    План: {minutesLabel(task.estimateMinutes)}
                                   </small>
                                 )}
-                              </span>
-                              {task.project && (
-                                <span className="task-tag">{task.project}</span>
-                              )}
-                              {task.dueTime && <small>🕑 {task.dueTime}</small>}
-                              {task.estimateMinutes > 0 && (
-                                <small>
-                                  План: {minutesLabel(task.estimateMinutes)}
-                                </small>
-                              )}
-                              <select
-                                className="task-status-select"
-                                aria-label={`Статус задачи ${task.title}`}
-                                value={task.status}
-                                onChange={(event) =>
-                                  setTaskStatus(
-                                    task,
-                                    event.target.value as Task["status"],
-                                  )
-                                }
-                              >
-                                <option value="todo">Сделать</option>
-                                <option value="doing">В работе</option>
-                                <option value="done">Готово</option>
-                              </select>
-                              <button
-                                className="mini-action"
-                                title="Редактировать"
-                                aria-label={`Редактировать задачу ${task.title}`}
-                                onClick={() => editTask(task)}
-                              >
-                                ✎
-                              </button>
-                              <button
-                                className="mini-action danger-text"
-                                title="Удалить"
-                                aria-label={`Удалить задачу ${task.title}`}
-                                onClick={() => deleteTask(task)}
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          ))}
+                                <button
+                                  className="mini-action"
+                                  title="Редактировать"
+                                  aria-label={`Редактировать задачу ${task.title}`}
+                                  onClick={() => editTaskRow(task)}
+                                >
+                                  ✎
+                                </button>
+                                <button
+                                  className="mini-action danger-text"
+                                  title="Удалить"
+                                  aria-label={`Удалить задачу ${task.title}`}
+                                  onClick={() => deleteTask(task)}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ),
+                          )}
                         {!visibleDayTasks.some(
                           (task) => task.status === status,
-                        ) && <p className="empty-column">Здесь пока пусто</p>}
+                        ) &&
+                          !(status === "todo" && isAddingBoardTask) && (
+                            <p className="empty-column">Здесь пока пусто</p>
+                          )}
                       </div>
                     </section>
                   ))}
@@ -937,7 +1011,10 @@ function App() {
                       <div className="section-heading">
                         <h2>Новая задача на этот день</h2>
                       </div>
-                      <form className="hub-form-row" onSubmit={addCalendarTask}>
+                      <form
+                        className="hub-form-row"
+                        onSubmit={addTaskForSelectedDay}
+                      >
                         <input
                           aria-label="Название новой задачи"
                           placeholder="Новая задача на этот день…"
@@ -981,73 +1058,8 @@ function App() {
                         <p className="empty-state">На этот день задач нет.</p>
                       ) : (
                         calendarDayTasks.map((task) =>
-                          calendarTaskDraft?.id === task.id ? (
-                            <form
-                              className="hub-edit-row"
-                              key={task.id}
-                              onSubmit={saveCalendarTaskEdit}
-                            >
-                              <input
-                                aria-label="Название задачи"
-                                value={calendarTaskDraft.title}
-                                onChange={(event) =>
-                                  setCalendarTaskDraft({
-                                    ...calendarTaskDraft,
-                                    title: event.target.value,
-                                  })
-                                }
-                                required
-                              />
-                              <input
-                                aria-label="Проект"
-                                placeholder="проект"
-                                value={calendarTaskDraft.project}
-                                onChange={(event) =>
-                                  setCalendarTaskDraft({
-                                    ...calendarTaskDraft,
-                                    project: event.target.value,
-                                  })
-                                }
-                              />
-                              <input
-                                aria-label="Дата задачи"
-                                type="date"
-                                value={calendarTaskDraft.date}
-                                onChange={(event) =>
-                                  setCalendarTaskDraft({
-                                    ...calendarTaskDraft,
-                                    date: event.target.value,
-                                  })
-                                }
-                                required
-                              />
-                              <input
-                                aria-label="Время дедлайна"
-                                type="time"
-                                value={calendarTaskDraft.dueTime}
-                                onChange={(event) =>
-                                  setCalendarTaskDraft({
-                                    ...calendarTaskDraft,
-                                    dueTime: event.target.value,
-                                  })
-                                }
-                              />
-                              <button
-                                type="submit"
-                                title="Сохранить"
-                                aria-label="Сохранить задачу"
-                              >
-                                💾
-                              </button>
-                              <button
-                                type="button"
-                                title="Отмена"
-                                aria-label="Отменить редактирование задачи"
-                                onClick={() => setCalendarTaskDraft(null)}
-                              >
-                                ✕
-                              </button>
-                            </form>
+                          taskRowDraft?.id === task.id ? (
+                            taskRowEditor
                           ) : (
                             <div
                               className={`hub-day-row ${task.status === "done" ? "is-done" : ""}`}
@@ -1088,7 +1100,7 @@ function App() {
                                 className="mini-action"
                                 title="Редактировать"
                                 aria-label={`Редактировать задачу ${task.title}`}
-                                onClick={() => editCalendarTask(task)}
+                                onClick={() => editTaskRow(task)}
                               >
                                 ✎
                               </button>
@@ -1279,31 +1291,6 @@ function App() {
 
             {view === "statistics" && (
               <div className="statistics-page">
-                <section className="panel statistics-day-panel">
-                  <div className="section-heading">
-                    <h2>
-                      {formatDate(selectedDate, {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </h2>
-                  </div>
-                  <div className="stats-row">
-                    <div className="stat">
-                      <span>Задач на день</span>
-                      <strong>{dayTasks.length}</strong>
-                    </div>
-                    <div className="stat">
-                      <span>Выполнено</span>
-                      <strong>{completedCount}</strong>
-                    </div>
-                    <div className="stat">
-                      <span>Учтено времени</span>
-                      <strong>{minutesLabel(dayMinutes)}</strong>
-                    </div>
-                  </div>
-                </section>
                 <section className="panel statistics-period-panel">
                   <div className="section-heading">
                     <h2>{reportTitle(reportPeriod, reportStart, reportEnd)}</h2>
@@ -1338,9 +1325,7 @@ function App() {
                   <div className="section-heading">
                     <div>
                       <p className="eyebrow">ИТОГИ ПЕРИОДА</p>
-                      <h2>
-                        {reportTitle(reportPeriod, reportStart, reportEnd)}
-                      </h2>
+                      <h2>Отчёт за период</h2>
                     </div>
                     <button onClick={exportReport}>Скачать .md</button>
                   </div>
