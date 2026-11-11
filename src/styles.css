@@ -753,7 +753,7 @@ textarea {
     width: 180px;
   }
   .main-content {
-    padding: 28px 23px 55px;
+    padding: 32px clamp(28px, 3vw, 38px) 58px;
   }
   .board {
     grid-template-columns: 1fr;
@@ -885,9 +885,11 @@ textarea {
 
 @media (min-width: 1700px), (min-width: 1001px) and (min-aspect-ratio: 2 / 1) {
   .app-shell {
-    width: calc(100% - clamp(32px, 4vw, 160px));
-    height: calc(100dvh - 32px);
-    margin: 16px auto;
+    --frame-gap-inline: clamp(48px, 5vw, 140px);
+    --frame-gap-block: clamp(32px, 5vh, 68px);
+    width: calc(100% - var(--frame-gap-inline) - var(--frame-gap-inline));
+    height: calc(100dvh - var(--frame-gap-block) - var(--frame-gap-block));
+    margin: var(--frame-gap-block) auto;
   }
 
   .sidebar {
@@ -907,7 +909,8 @@ textarea {
 
   .main-content {
     max-width: none;
-    padding: 18px clamp(18px, 1.8vw, 48px) 25px;
+    padding: clamp(26px, 3vh, 42px) clamp(30px, 3vw, 72px)
+      clamp(30px, 4vh, 50px);
     font-size: 13px;
   }
 
