@@ -484,116 +484,124 @@ function App() {
             )}
 
             {view === "tasks" && (
-              <>
-                <div className="stats-row">
-                  <div className="stat">
-                    <span>Задач на день</span>
-                    <strong>{dayTasks.length}</strong>
-                  </div>
-                  <div className="stat">
-                    <span>Выполнено</span>
-                    <strong>{completedCount}</strong>
-                  </div>
-                  <div className="stat">
-                    <span>Учтено времени</span>
-                    <strong>{minutesLabel(dayMinutes)}</strong>
-                  </div>
-                </div>
-                <section className="panel">
-                  <div className="section-heading">
-                    <h2>
-                      {editingTaskId ? "Редактировать задачу" : "Новая задача"}
-                    </h2>
-                  </div>
-                  <form onSubmit={saveTask} className="task-form">
-                    <label>
-                      Дата задачи
-                      <input
-                        type="date"
-                        value={taskDate}
-                        onChange={(event) => setTaskDate(event.target.value)}
-                        required
-                      />
-                    </label>
-                    <label className="wide-field">
-                      Название
-                      <input
-                        value={taskTitle}
-                        onChange={(event) => setTaskTitle(event.target.value)}
-                        placeholder="Что нужно сделать?"
-                        required
-                      />
-                    </label>
-                    <label>
-                      Проект
-                      <input
-                        value={taskProject}
-                        onChange={(event) => setTaskProject(event.target.value)}
-                        placeholder="Необязательно"
-                      />
-                    </label>
-                    <label>
-                      Время срока
-                      <input
-                        type="time"
-                        value={taskDueTime}
-                        onChange={(event) => setTaskDueTime(event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      План, минут
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={taskEstimate}
-                        onChange={(event) =>
-                          setTaskEstimate(event.target.value)
-                        }
-                        placeholder="Необязательно"
-                      />
-                    </label>
-                    <label className="wide-field">
-                      Заметка
-                      <textarea
-                        value={taskNote}
-                        onChange={(event) => setTaskNote(event.target.value)}
-                        placeholder="Детали задачи"
-                        rows={2}
-                      />
-                    </label>
-                    <div className="form-actions">
-                      <button type="submit" className="primary-button">
-                        {editingTaskId ? "Сохранить" : "Добавить задачу"}
-                      </button>
-                      {editingTaskId && (
-                        <button type="button" onClick={resetTaskForm}>
-                          Отмена
-                        </button>
-                      )}
+              <div className="task-workspace">
+                <div className="task-workspace-controls">
+                  <div className="stats-row">
+                    <div className="stat">
+                      <span>Задач на день</span>
+                      <strong>{dayTasks.length}</strong>
                     </div>
-                  </form>
-                </section>
-                {projects.length > 0 && (
-                  <div className="project-filter">
-                    <label>
-                      Проект
-                      <select
-                        value={projectFilter}
-                        onChange={(event) =>
-                          setProjectFilter(event.target.value)
-                        }
-                      >
-                        <option value="">Все проекты</option>
-                        {projects.map((project) => (
-                          <option value={project} key={project}>
-                            {project}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <div className="stat">
+                      <span>Выполнено</span>
+                      <strong>{completedCount}</strong>
+                    </div>
+                    <div className="stat">
+                      <span>Учтено времени</span>
+                      <strong>{minutesLabel(dayMinutes)}</strong>
+                    </div>
                   </div>
-                )}
+                  <section className="panel">
+                    <div className="section-heading">
+                      <h2>
+                        {editingTaskId
+                          ? "Редактировать задачу"
+                          : "Новая задача"}
+                      </h2>
+                    </div>
+                    <form onSubmit={saveTask} className="task-form">
+                      <label>
+                        Дата задачи
+                        <input
+                          type="date"
+                          value={taskDate}
+                          onChange={(event) => setTaskDate(event.target.value)}
+                          required
+                        />
+                      </label>
+                      <label className="wide-field">
+                        Название
+                        <input
+                          value={taskTitle}
+                          onChange={(event) => setTaskTitle(event.target.value)}
+                          placeholder="Что нужно сделать?"
+                          required
+                        />
+                      </label>
+                      <label>
+                        Проект
+                        <input
+                          value={taskProject}
+                          onChange={(event) =>
+                            setTaskProject(event.target.value)
+                          }
+                          placeholder="Необязательно"
+                        />
+                      </label>
+                      <label>
+                        Время срока
+                        <input
+                          type="time"
+                          value={taskDueTime}
+                          onChange={(event) =>
+                            setTaskDueTime(event.target.value)
+                          }
+                        />
+                      </label>
+                      <label>
+                        План, минут
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={taskEstimate}
+                          onChange={(event) =>
+                            setTaskEstimate(event.target.value)
+                          }
+                          placeholder="Необязательно"
+                        />
+                      </label>
+                      <label className="wide-field">
+                        Заметка
+                        <textarea
+                          value={taskNote}
+                          onChange={(event) => setTaskNote(event.target.value)}
+                          placeholder="Детали задачи"
+                          rows={2}
+                        />
+                      </label>
+                      <div className="form-actions">
+                        <button type="submit" className="primary-button">
+                          {editingTaskId ? "Сохранить" : "Добавить задачу"}
+                        </button>
+                        {editingTaskId && (
+                          <button type="button" onClick={resetTaskForm}>
+                            Отмена
+                          </button>
+                        )}
+                      </div>
+                    </form>
+                  </section>
+                  {projects.length > 0 && (
+                    <div className="project-filter">
+                      <label>
+                        Проект
+                        <select
+                          value={projectFilter}
+                          onChange={(event) =>
+                            setProjectFilter(event.target.value)
+                          }
+                        >
+                          <option value="">Все проекты</option>
+                          {projects.map((project) => (
+                            <option value={project} key={project}>
+                              {project}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  )}
+                </div>
                 <div className="board">
                   {(["todo", "doing", "done"] as const).map((status) => (
                     <section className="board-column" key={status}>
@@ -669,7 +677,7 @@ function App() {
                     </section>
                   ))}
                 </div>
-              </>
+              </div>
             )}
 
             {view === "time" && (
@@ -850,7 +858,7 @@ function App() {
             )}
 
             {view === "calendar" && (
-              <>
+              <div className="calendar-workspace">
                 <section className="panel calendar-panel">
                   <div className="section-heading calendar-heading">
                     <h2>
@@ -969,7 +977,7 @@ function App() {
                     </div>
                   </div>
                 </section>
-              </>
+              </div>
             )}
 
             {view === "reports" && (
