@@ -505,7 +505,8 @@ textarea {
   margin-left: auto;
   box-shadow: none;
 }
-.calendar-tasks-panel .section-heading {
+.calendar-tasks-panel .section-heading,
+.calendar-unscheduled-panel .section-heading {
   flex-wrap: wrap;
 }
 .card-stack {
@@ -1084,6 +1085,32 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
     gap: clamp(14px, 1.2vw, 28px);
+  }
+
+  .calendar-panel {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .calendar-tasks-panel {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .calendar-unscheduled-panel {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+@media (min-width: 2600px) and (min-aspect-ratio: 21 / 9) {
+  .calendar-workspace {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .calendar-workspace > .panel {
+    grid-column: auto;
+    grid-row: auto;
   }
 }
 

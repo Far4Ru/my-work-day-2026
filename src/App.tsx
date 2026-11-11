@@ -14,6 +14,7 @@ import {
 } from "./dates";
 import { database } from "./database";
 import type { ActiveTimer, ReportPeriod, Task, TimeEntry } from "./model";
+import { scheduleTask, unscheduleTask } from "./taskSchedule";
 import { entriesFromTimer } from "./timer";
 
 type View = "tasks" | "calendar" | "statistics" | "reports";
@@ -107,6 +108,9 @@ function App() {
   const [quickTaskDueTime, setQuickTaskDueTime] = useState("");
   const [showQuickTimeFields, setShowQuickTimeFields] = useState(false);
   const [isAddingDayTask, setIsAddingDayTask] = useState(false);
+  const [isAddingUnscheduledTask, setIsAddingUnscheduledTask] = useState(false);
+  const [unscheduledTaskTitle, setUnscheduledTaskTitle] = useState("");
+  const [unscheduledTaskProject, setUnscheduledTaskProject] = useState("");
   const [taskRowDraft, setTaskRowDraft] = useState<TaskRowDraft | null>(null);
   const [quickTimeStart, setQuickTimeStart] = useState("");
   const [quickTimeEnd, setQuickTimeEnd] = useState("");
@@ -122,6 +126,7 @@ function App() {
 
   useEffect(() => {
     setIsAddingDayTask(false);
+    setIsAddingUnscheduledTask(false);
     setShowQuickTimeFields(false);
     setTaskRowDraft(null);
     setEditingEntryId(null);
@@ -170,6 +175,13 @@ function App() {
         .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
     [tasks, selectedDate],
   );
+  const unscheduledTasks = useMemo(
+    () =>
+      tasks
+        .filter((task) => !task.date)
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+    [tasks],
+  );
   const dayEntries = useMemo(
     () =>
       entries
@@ -181,10 +193,11 @@ function App() {
     (total, entry) => total + entry.minutes,
     0,
   );
-  const dayCompleted = tasks.filter((task) =>
-    task.completedAt
-      ? dateKeyFromTimestamp(task.completedAt) === selectedDate
-      : false,
+  const dayCompleted = tasks.filter(
+    (task) =>
+      task.date !== null &&
+      task.completedAt !== null &&
+      dateKeyFromTimestamp(task.completedAt) === selectedDate,
   );
   const calendarDayTasks = [
     ...dayTasks,
@@ -216,6 +229,42 @@ function App() {
     if (!window.confirm(`Удалить задачу «${task.title}»?`)) return;
     void change(() => database.deleteTask(task.id));
     if (taskRowDraft?.id === task.id) setTaskRowDraft(null);
+  }
+
+  function moveTaskToSelectedDay(task: Task) {
+    void change(() => database.saveTask(scheduleTask(task, selectedDate)));
+  }
+
+  function moveTaskToAnyDay(task: Task) {
+    void change(() => database.saveTask(unscheduleTask(task)));
+  }
+
+  function addUnscheduledTask(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!unscheduledTaskTitle.trim() || taskSubmitBusy.current) return;
+
+    const task: Task = {
+      id: crypto.randomUUID(),
+      title: unscheduledTaskTitle.trim(),
+      project: unscheduledTaskProject.trim(),
+      note: "",
+      date: null,
+      dueTime: "",
+      estimateMinutes: 0,
+      status: "todo",
+      createdAt: new Date().toISOString(),
+      completedAt: null,
+    };
+
+    taskSubmitBusy.current = true;
+    void change(() => database.saveTask(task)).then((saved) => {
+      taskSubmitBusy.current = false;
+      if (saved) {
+        setUnscheduledTaskTitle("");
+        setUnscheduledTaskProject("");
+        setIsAddingUnscheduledTask(false);
+      }
+    });
   }
 
   function addTaskForSelectedDay(event: React.FormEvent<HTMLFormElement>) {
@@ -291,7 +340,7 @@ function App() {
       title: taskRowDraft.title.trim(),
       project: taskRowDraft.project.trim(),
       date: taskRowDraft.date,
-      dueTime: taskRowDraft.dueTime,
+      dueTime: taskRowDraft.date ? taskRowDraft.dueTime : "",
       note: taskRowDraft.note.trim(),
       estimateMinutes: Math.round(estimateMinutes),
     };
@@ -438,7 +487,8 @@ function App() {
 
   const [reportStart, reportEnd] = periodBounds(reportPeriod, selectedDate);
   const reportTasks = tasks.filter(
-    (task) => task.date >= reportStart && task.date <= reportEnd,
+    (task) =>
+      task.date !== null && task.date >= reportStart && task.date <= reportEnd,
   );
   const reportDone = tasks.filter((task) => {
     const completionDate = task.completedAt
@@ -583,6 +633,40 @@ function App() {
     </form>
   );
 
+  const unscheduledTaskForm = (
+    <form className="hub-edit-row" onSubmit={addUnscheduledTask}>
+      <input
+        aria-label="Название задачи без даты"
+        placeholder="Новая задача…"
+        value={unscheduledTaskTitle}
+        onChange={(event) => setUnscheduledTaskTitle(event.target.value)}
+        autoFocus
+        required
+      />
+      <input
+        aria-label="Проект задачи без даты"
+        placeholder="проект"
+        value={unscheduledTaskProject}
+        onChange={(event) => setUnscheduledTaskProject(event.target.value)}
+      />
+      <button
+        type="submit"
+        title="Добавить"
+        aria-label="Добавить задачу без даты"
+      >
+        <Icon name="save" />
+      </button>
+      <button
+        type="button"
+        title="Отмена"
+        aria-label="Отменить добавление задачи без даты"
+        onClick={() => setIsAddingUnscheduledTask(false)}
+      >
+        <Icon name="close" />
+      </button>
+    </form>
+  );
+
   const taskRowEditor = taskRowDraft && (
     <form
       className="hub-edit-row task-row-editor"
@@ -606,22 +690,29 @@ function App() {
         }
       />
       <input
-        aria-label="Дата задачи"
+        aria-label="Дата задачи, необязательно"
         type="date"
-        value={taskRowDraft.date}
+        value={taskRowDraft.date ?? ""}
         onChange={(event) =>
-          setTaskRowDraft({ ...taskRowDraft, date: event.target.value })
-        }
-        required
-      />
-      <input
-        aria-label="Время дедлайна"
-        type="time"
-        value={taskRowDraft.dueTime}
-        onChange={(event) =>
-          setTaskRowDraft({ ...taskRowDraft, dueTime: event.target.value })
+          setTaskRowDraft({
+            ...taskRowDraft,
+            date: event.target.value || null,
+            dueTime: event.target.value ? taskRowDraft.dueTime : "",
+            showTimeFields:
+              Boolean(event.target.value) && taskRowDraft.showTimeFields,
+          })
         }
       />
+      {taskRowDraft.date && (
+        <input
+          aria-label="Время дедлайна"
+          type="time"
+          value={taskRowDraft.dueTime}
+          onChange={(event) =>
+            setTaskRowDraft({ ...taskRowDraft, dueTime: event.target.value })
+          }
+        />
+      )}
       <textarea
         aria-label="Заметка"
         placeholder="Заметка"
@@ -645,7 +736,7 @@ function App() {
           })
         }
       />
-      {view === "calendar" && (
+      {view === "calendar" && taskRowDraft.date && (
         <button
           type="button"
           className={
@@ -666,36 +757,38 @@ function App() {
           <Icon name="clock" />
         </button>
       )}
-      {view === "calendar" && taskRowDraft.showTimeFields && (
-        <div className="task-time-fields">
-          <label>
-            Начало
-            <input
-              type="time"
-              value={taskRowDraft.timeStart}
-              onChange={(event) =>
-                setTaskRowDraft({
-                  ...taskRowDraft,
-                  timeStart: event.target.value,
-                })
-              }
-            />
-          </label>
-          <label>
-            Окончание
-            <input
-              type="time"
-              value={taskRowDraft.timeEnd}
-              onChange={(event) =>
-                setTaskRowDraft({
-                  ...taskRowDraft,
-                  timeEnd: event.target.value,
-                })
-              }
-            />
-          </label>
-        </div>
-      )}
+      {view === "calendar" &&
+        taskRowDraft.date &&
+        taskRowDraft.showTimeFields && (
+          <div className="task-time-fields">
+            <label>
+              Начало
+              <input
+                type="time"
+                value={taskRowDraft.timeStart}
+                onChange={(event) =>
+                  setTaskRowDraft({
+                    ...taskRowDraft,
+                    timeStart: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Окончание
+              <input
+                type="time"
+                value={taskRowDraft.timeEnd}
+                onChange={(event) =>
+                  setTaskRowDraft({
+                    ...taskRowDraft,
+                    timeEnd: event.target.value,
+                  })
+                }
+              />
+            </label>
+          </div>
+        )}
       <button type="submit" title="Сохранить" aria-label="Сохранить задачу">
         <Icon name="save" />
       </button>
@@ -1187,6 +1280,14 @@ function App() {
                             )}
                             <button
                               className="mini-action"
+                              title="Перенести в задачи без даты"
+                              aria-label={`Убрать задачу ${task.title} из дня`}
+                              onClick={() => moveTaskToAnyDay(task)}
+                            >
+                              <Icon name="arrow-left" />
+                            </button>
+                            <button
+                              className="mini-action"
                               title="Редактировать"
                               aria-label={`Редактировать задачу ${task.title}`}
                               onClick={() => editTaskRow(task)}
@@ -1346,6 +1447,72 @@ function App() {
                         )}
                       </div>
                     </div>
+                  </section>
+                  <section className="panel calendar-unscheduled-panel">
+                    <div className="section-heading">
+                      <h2>На любой день</h2>
+                      <button
+                        className="board-add-button"
+                        aria-label="Добавить задачу без даты"
+                        title="Добавить задачу без даты"
+                        onClick={() =>
+                          setIsAddingUnscheduledTask((isAdding) => !isAdding)
+                        }
+                      >
+                        <Icon name="plus" />
+                      </button>
+                      <strong>{unscheduledTasks.length}</strong>
+                    </div>
+                    {isAddingUnscheduledTask && unscheduledTaskForm}
+                    {unscheduledTasks.length === 0 &&
+                    !isAddingUnscheduledTask ? (
+                      <p className="empty-state">Задач без даты нет.</p>
+                    ) : (
+                      unscheduledTasks.map((task) =>
+                        taskRowDraft?.id === task.id ? (
+                          taskRowEditor
+                        ) : (
+                          <div
+                            className={`hub-day-row ${task.status === "done" ? "is-done" : ""}`}
+                            key={task.id}
+                          >
+                            <button
+                              className="mini-action"
+                              title="Перенести на выбранный день"
+                              aria-label={`Перенести задачу ${task.title} на ${formatDate(selectedDate)}`}
+                              onClick={() => moveTaskToSelectedDay(task)}
+                            >
+                              <Icon name="arrow-right" />
+                            </button>
+                            <span className="hub-row-title">{task.title}</span>
+                            {task.project && (
+                              <span className="task-tag">{task.project}</span>
+                            )}
+                            {task.status !== "todo" && (
+                              <span className="task-tag">
+                                {task.status === "done" ? "Готово" : "В работе"}
+                              </span>
+                            )}
+                            <button
+                              className="mini-action"
+                              title="Редактировать"
+                              aria-label={`Редактировать задачу ${task.title}`}
+                              onClick={() => editTaskRow(task)}
+                            >
+                              <Icon name="edit" />
+                            </button>
+                            <button
+                              className="mini-action danger-text"
+                              title="Удалить"
+                              aria-label={`Удалить задачу ${task.title}`}
+                              onClick={() => deleteTask(task)}
+                            >
+                              <Icon name="delete" />
+                            </button>
+                          </div>
+                        ),
+                      )
+                    )}
                   </section>
                 </div>
               </div>

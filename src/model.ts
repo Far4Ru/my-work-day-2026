@@ -3,7 +3,7 @@ export interface Task {
   title: string;
   project: string;
   note: string;
-  date: string;
+  date: string | null;
   dueTime: string;
   estimateMinutes: number;
   status: "todo" | "doing" | "done";
