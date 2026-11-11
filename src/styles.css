@@ -1126,8 +1126,8 @@ textarea {
 
 @media (min-width: 1700px), (min-width: 1600px) and (min-aspect-ratio: 2 / 1) {
   .app-shell {
-    --frame-gap-inline: clamp(130px, 8vw, 280px);
-    --frame-gap-block: clamp(54px, 8vh, 108px);
+    --frame-gap-inline: clamp(320px, 8vw, 420px);
+    --frame-gap-block: clamp(96px, 8vh, 108px);
   }
 
   .main-content {
