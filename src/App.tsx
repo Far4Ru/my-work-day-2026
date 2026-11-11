@@ -486,6 +486,15 @@ function App() {
   }
 
   const [reportStart, reportEnd] = periodBounds(reportPeriod, selectedDate);
+  const headerDate =
+    view === "tasks" || view === "calendar" || reportPeriod === "day"
+      ? formatDate(selectedDate, {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : reportTitle(reportPeriod, reportStart, reportEnd);
   const reportTasks = tasks.filter(
     (task) =>
       task.date !== null && task.date >= reportStart && task.date <= reportEnd,
@@ -872,18 +881,7 @@ function App() {
                       ? "Статистика"
                       : "Отчёт"}
               </h1>
-              <p className="subtitle">
-                {view === "reports"
-                  ? "Формирование отчета за период"
-                  : view === "statistics"
-                    ? "Показатели за выбранный период"
-                    : formatDate(selectedDate, {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-              </p>
+              <p className="subtitle">{headerDate}</p>
             </div>
           </header>
           {ready && (
@@ -1522,12 +1520,10 @@ function App() {
               <>
                 {periodTabs}
                 <div className="statistics-page">
-                  <section className="panel statistics-period-panel">
-                    <div className="section-heading">
-                      <h2>
-                        {reportTitle(reportPeriod, reportStart, reportEnd)}
-                      </h2>
-                    </div>
+                  <section
+                    className="panel statistics-period-panel"
+                    aria-label="Показатели за период"
+                  >
                     <div className="stats-row">
                       <div className="stat">
                         <span>Запланировано</span>

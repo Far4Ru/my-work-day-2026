@@ -780,9 +780,6 @@ textarea {
   min-width: 0;
   margin-bottom: 0;
 }
-.statistics-page .section-heading h2 {
-  text-transform: capitalize;
-}
 .report-row small {
   display: block;
   margin-top: 4px;
