@@ -102,7 +102,6 @@ function App() {
   const [now, setNow] = useState(Date.now());
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
-  const [projectFilter, setProjectFilter] = useState("");
   const [quickTaskTitle, setQuickTaskTitle] = useState("");
   const [quickTaskProject, setQuickTaskProject] = useState("");
   const [quickTaskDueTime, setQuickTaskDueTime] = useState("");
@@ -209,13 +208,6 @@ function App() {
   const calendarCompletedCount = calendarDayTasks.filter(
     (task) => task.status === "done",
   ).length;
-  const projects = Array.from(
-    new Set(tasks.map((task) => task.project).filter(Boolean)),
-  ).sort();
-  const visibleDayTasks = projectFilter
-    ? dayTasks.filter((task) => task.project === projectFilter)
-    : dayTasks;
-
   function setTaskStatus(task: Task, status: Task["status"]) {
     const updated: Task = {
       ...task,
@@ -984,26 +976,6 @@ function App() {
           <>
             {view === "tasks" && (
               <div className="task-workspace">
-                {projects.length > 0 && (
-                  <section className="panel project-filter">
-                    <label>
-                      Проект
-                      <select
-                        value={projectFilter}
-                        onChange={(event) =>
-                          setProjectFilter(event.target.value)
-                        }
-                      >
-                        <option value="">Все проекты</option>
-                        {projects.map((project) => (
-                          <option value={project} key={project}>
-                            {project}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </section>
-                )}
                 <div className="board">
                   {(["todo", "doing", "done"] as const).map((status) => (
                     <section className="board-column" key={status}>
@@ -1020,7 +992,7 @@ function App() {
                             aria-label="Добавить задачу на выбранный день"
                             title="Добавить задачу"
                             onClick={() => {
-                              setQuickTaskProject(projectFilter);
+                              setQuickTaskProject("");
                               setIsAddingDayTask((isAdding) => !isAdding);
                             }}
                           >
@@ -1029,7 +1001,7 @@ function App() {
                         )}
                         <span className="count">
                           {
-                            visibleDayTasks.filter(
+                            dayTasks.filter(
                               (task) => task.status === status,
                             ).length
                           }
@@ -1037,7 +1009,7 @@ function App() {
                       </h2>
                       <div className="card-stack">
                         {status === "todo" && isAddingDayTask && quickTaskForm}
-                        {visibleDayTasks
+                        {dayTasks
                           .filter((task) => task.status === status)
                           .map((task) =>
                             taskRowDraft?.id === task.id ? (
@@ -1134,7 +1106,7 @@ function App() {
                               </div>
                             ),
                           )}
-                        {!visibleDayTasks.some(
+                        {!dayTasks.some(
                           (task) => task.status === status,
                         ) &&
                           !(status === "todo" && isAddingDayTask) && (

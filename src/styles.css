@@ -421,9 +421,6 @@ textarea {
   font-size: 26px;
   letter-spacing: -0.05em;
 }
-.project-filter {
-  width: min(100%, 320px);
-}
 .primary-button {
   padding: 10px 15px;
   color: #fff;
