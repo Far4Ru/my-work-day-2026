@@ -107,20 +107,21 @@ button:hover:not(:disabled) {
 .board-edge-button .icon {
   width: 26px;
   height: 26px;
+  transition: transform 380ms ease;
 }
 .board-edge-button--left {
   left: 0;
   transform: translate(-50%, -50%);
 }
 .board-edge-button--left .icon {
-  transform: translateX(0px);
+  transform: translateX(14px);
 }
 .board-edge-button--right {
   right: 0;
   transform: translate(50%, -50%);
 }
 .board-edge-button--right .icon {
-  transform: translateX(0px);
+  transform: translateX(-14px);
 }
 .board-edge-button--left:hover,
 .board-edge-button--left:focus-visible {
@@ -131,6 +132,12 @@ button:hover:not(:disabled) {
 .board-edge-button--right:focus-visible {
   transform: translate(-25%, -50%) scale(1.06);
   opacity: 1;
+}
+.board-edge-button--left:hover .icon,
+.board-edge-button--left:focus-visible .icon,
+.board-edge-button--right:hover .icon,
+.board-edge-button--right:focus-visible .icon {
+  transform: translateX(0);
 }
 .board-edge-button:disabled {
   opacity: 0.12;
@@ -156,7 +163,8 @@ button:hover:not(:disabled) {
 }
 @media (prefers-reduced-motion: reduce) {
   .board-slide,
-  .board-edge-button {
+  .board-edge-button,
+  .board-edge-button .icon {
     transition: none;
   }
 }
