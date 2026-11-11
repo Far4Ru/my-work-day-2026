@@ -17,6 +17,8 @@ export interface TimeEntry {
   title: string;
   date: string;
   minutes: number;
+  startTime?: string;
+  endTime?: string;
   createdAt: string;
 }
 

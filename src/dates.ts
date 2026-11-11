@@ -46,3 +46,34 @@ export function minutesLabel(minutes: number): string {
   if (remainder === 0) return `${hours} ч`;
   return `${hours} ч ${remainder} мин`;
 }
+
+export function clockTime(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+export function minutesBetweenTimes(start: string, end: string): number | null {
+  const [startHours, startMinutes] = start.split(":").map(Number);
+  const [endHours, endMinutes] = end.split(":").map(Number);
+
+  if (
+    !Number.isInteger(startHours) ||
+    !Number.isInteger(startMinutes) ||
+    !Number.isInteger(endHours) ||
+    !Number.isInteger(endMinutes) ||
+    startHours < 0 ||
+    startHours > 23 ||
+    endHours < 0 ||
+    endHours > 23 ||
+    startMinutes < 0 ||
+    startMinutes > 59 ||
+    endMinutes < 0 ||
+    endMinutes > 59
+  ) {
+    return null;
+  }
+
+  const duration = endHours * 60 + endMinutes - startHours * 60 - startMinutes;
+  return duration > 0 ? duration : null;
+}
