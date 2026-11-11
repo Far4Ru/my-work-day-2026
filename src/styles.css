@@ -236,10 +236,6 @@ h3 {
   text-transform: capitalize;
   line-height: 1.5;
 }
-.today-button {
-  flex: none;
-  margin-top: 12px;
-}
 .today-button,
 .section-heading button,
 .form-actions button:not(.primary-button),
@@ -256,6 +252,7 @@ h3 {
 .date-toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 30px;
 }
@@ -594,12 +591,23 @@ textarea {
 }
 .calendar-heading > div {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
 }
 .calendar-heading button {
   min-width: 35px;
   padding: 6px;
   font-size: 20px;
+  line-height: 18px;
+}
+.date-toolbar .today-button,
+.calendar-heading .today-button {
+  flex: none;
+  width: auto;
+  min-width: 0;
+  padding: 8px 12px;
+  font-size: 12px;
   line-height: 18px;
 }
 .calendar-grid {
@@ -849,6 +857,12 @@ textarea {
     flex-wrap: wrap;
     gap: 14px;
     padding-right: 0;
+  }
+  .date-toolbar input {
+    width: min(150px, 35vw);
+  }
+  .calendar-heading {
+    flex-wrap: wrap;
   }
   .stats-row {
     gap: 7px;

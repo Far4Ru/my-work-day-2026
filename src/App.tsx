@@ -438,12 +438,6 @@ function App() {
                   })}
             </p>
           </div>
-          <button
-            className="today-button"
-            onClick={() => setSelectedDate(dateKey(new Date()))}
-          >
-            Сегодня
-          </button>
         </header>
 
         {error && (
@@ -479,6 +473,12 @@ function App() {
                   onClick={() => moveSelectedDate(1)}
                 >
                   ›
+                </button>
+                <button
+                  className="today-button"
+                  onClick={() => setSelectedDate(dateKey(new Date()))}
+                >
+                  Сегодня
                 </button>
               </div>
             )}
@@ -879,6 +879,12 @@ function App() {
                         onClick={() => moveMonth(1)}
                       >
                         ›
+                      </button>
+                      <button
+                        className="today-button"
+                        onClick={() => setSelectedDate(dateKey(new Date()))}
+                      >
+                        Сегодня
                       </button>
                     </div>
                   </div>
