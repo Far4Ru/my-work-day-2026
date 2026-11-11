@@ -120,7 +120,7 @@ button:hover:not(:disabled) {
   transform: translate(50%, -50%);
 }
 .board-edge-button--right .icon {
-  transform: translateX(-14px);
+  transform: translateX(0px);
 }
 .board-edge-button--left:hover,
 .board-edge-button--left:focus-visible {
@@ -129,7 +129,7 @@ button:hover:not(:disabled) {
 }
 .board-edge-button--right:hover,
 .board-edge-button--right:focus-visible {
-  transform: translate(6%, -50%) scale(1.06);
+  transform: translate(-25%, -50%) scale(1.06);
   opacity: 1;
 }
 .board-edge-button:disabled {
