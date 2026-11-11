@@ -186,6 +186,48 @@ button:hover:not(:disabled) {
   padding: 0 36px 30px 0;
   border-bottom: 2px solid #59635c;
 }
+.header-date-slot {
+  display: grid;
+  margin-bottom: 30px;
+  padding-bottom: 30px;
+  border-bottom: 2px solid #59635c;
+}
+.header-date-slot > .page-header,
+.header-date-slot > .date-toolbar {
+  grid-area: 1 / 1;
+}
+.header-date-slot > .page-header {
+  margin: 0;
+  padding: 0 36px 0 0;
+  border: 0;
+}
+.header-date-slot > .date-toolbar {
+  align-self: center;
+  margin: 0;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.header-date-slot:focus-within > .page-header {
+  opacity: 0;
+  pointer-events: none;
+}
+.header-date-slot:focus-within > .date-toolbar {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (hover: hover) {
+  .header-date-slot:hover > .page-header {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .header-date-slot:hover > .date-toolbar {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
 .page-header > div {
   display: flex;
   flex-direction: column;
@@ -864,6 +906,28 @@ textarea {
   }
 }
 
+@media (hover: none) {
+  .header-date-slot {
+    display: block;
+    padding-bottom: 0;
+    border: 0;
+  }
+  .header-date-slot > .page-header {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #59635c;
+  }
+  .header-date-slot > .date-toolbar {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .header-date-slot:focus-within > .page-header {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 @media (min-width: 1700px), (min-width: 1001px) and (min-aspect-ratio: 2 / 1) {
   .app-shell {
     --frame-gap-inline: clamp(54px, 6vw, 120px);
@@ -895,7 +959,7 @@ textarea {
     font-size: 13px;
   }
 
-  .page-header {
+  .header-date-slot {
     margin-bottom: 10px;
     padding-bottom: 10px;
   }

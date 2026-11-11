@@ -767,41 +767,33 @@ function App() {
       </aside>
 
       <main className="main-content">
-        <header className="page-header">
-          <div>
-            <h1>
-              {view === "tasks"
-                ? "Задачи дня"
-                : view === "calendar"
-                  ? "Календарь"
+        <div className="header-date-slot">
+          <header className="page-header" tabIndex={0}>
+            <div>
+              <h1>
+                {view === "tasks"
+                  ? "Задачи дня"
+                  : view === "calendar"
+                    ? "Календарь"
+                    : view === "statistics"
+                      ? "Статистика"
+                      : "Отчёт"}
+              </h1>
+              <p className="subtitle">
+                {view === "reports"
+                  ? "Формирование отчета за период"
                   : view === "statistics"
-                    ? "Статистика"
-                    : "Отчёт"}
-            </h1>
-            <p className="subtitle">
-              {view === "reports"
-                ? "Формирование отчета за период"
-                : view === "statistics"
-                  ? "Показатели за выбранный период"
-                  : formatDate(selectedDate, {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-            </p>
-          </div>
-        </header>
-
-        {error && (
-          <div className="error" role="alert">
-            {error}
-          </div>
-        )}
-        {!ready ? (
-          <p className="loading">Загрузка данных…</p>
-        ) : (
-          <>
+                    ? "Показатели за выбранный период"
+                    : formatDate(selectedDate, {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+              </p>
+            </div>
+          </header>
+          {ready && (
             <div className="date-toolbar">
               <button
                 aria-label="Предыдущий период"
@@ -883,7 +875,18 @@ function App() {
                 Сегодня
               </button>
             </div>
+          )}
+        </div>
 
+        {error && (
+          <div className="error" role="alert">
+            {error}
+          </div>
+        )}
+        {!ready ? (
+          <p className="loading">Загрузка данных…</p>
+        ) : (
+          <>
             {view === "tasks" && (
               <div className="task-workspace">
                 {projects.length > 0 && (
