@@ -69,7 +69,7 @@ function App() {
   const [quickTaskTitle, setQuickTaskTitle] = useState("");
   const [quickTaskProject, setQuickTaskProject] = useState("");
   const [quickTaskDueTime, setQuickTaskDueTime] = useState("");
-  const [isAddingBoardTask, setIsAddingBoardTask] = useState(false);
+  const [isAddingDayTask, setIsAddingDayTask] = useState(false);
   const [taskRowDraft, setTaskRowDraft] = useState<TaskRowDraft | null>(null);
   const [quickTimeTitle, setQuickTimeTitle] = useState("");
   const [quickTimeStart, setQuickTimeStart] = useState("");
@@ -84,10 +84,10 @@ function App() {
   const currentDay = dateKey(new Date(now));
 
   useEffect(() => {
-    setIsAddingBoardTask(false);
+    setIsAddingDayTask(false);
     setTaskRowDraft(null);
     setEditingEntryId(null);
-  }, [selectedDate]);
+  }, [selectedDate, view]);
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
@@ -202,7 +202,7 @@ function App() {
         setQuickTaskTitle("");
         setQuickTaskProject("");
         setQuickTaskDueTime("");
-        setIsAddingBoardTask(false);
+        setIsAddingDayTask(false);
       }
     });
   }
@@ -455,6 +455,42 @@ function App() {
       dateKey(new Date(date.getFullYear(), date.getMonth() + amount, 1)),
     );
   }
+
+  const quickTaskForm = (
+    <form className="hub-edit-row" onSubmit={addTaskForSelectedDay}>
+      <input
+        aria-label="Название новой задачи"
+        placeholder="Новая задача…"
+        value={quickTaskTitle}
+        onChange={(event) => setQuickTaskTitle(event.target.value)}
+        autoFocus
+        required
+      />
+      <input
+        aria-label="Проект новой задачи"
+        placeholder="проект"
+        value={quickTaskProject}
+        onChange={(event) => setQuickTaskProject(event.target.value)}
+      />
+      <input
+        aria-label="Время дедлайна новой задачи"
+        type="time"
+        value={quickTaskDueTime}
+        onChange={(event) => setQuickTaskDueTime(event.target.value)}
+      />
+      <button type="submit" title="Добавить" aria-label="Добавить задачу">
+        💾
+      </button>
+      <button
+        type="button"
+        title="Отмена"
+        aria-label="Отменить добавление задачи"
+        onClick={() => setIsAddingDayTask(false)}
+      >
+        ✕
+      </button>
+    </form>
+  );
 
   const taskRowEditor = taskRowDraft && (
     <form
@@ -740,7 +776,7 @@ function App() {
                             title="Добавить задачу"
                             onClick={() => {
                               setQuickTaskProject(projectFilter);
-                              setIsAddingBoardTask((isAdding) => !isAdding);
+                              setIsAddingDayTask((isAdding) => !isAdding);
                             }}
                           >
                             +
@@ -755,54 +791,7 @@ function App() {
                         </span>
                       </h2>
                       <div className="card-stack">
-                        {status === "todo" && isAddingBoardTask && (
-                          <form
-                            className="hub-edit-row"
-                            onSubmit={addTaskForSelectedDay}
-                          >
-                            <input
-                              aria-label="Название новой задачи"
-                              placeholder="Новая задача…"
-                              value={quickTaskTitle}
-                              onChange={(event) =>
-                                setQuickTaskTitle(event.target.value)
-                              }
-                              autoFocus
-                              required
-                            />
-                            <input
-                              aria-label="Проект новой задачи"
-                              placeholder="проект"
-                              value={quickTaskProject}
-                              onChange={(event) =>
-                                setQuickTaskProject(event.target.value)
-                              }
-                            />
-                            <input
-                              aria-label="Время дедлайна новой задачи"
-                              type="time"
-                              value={quickTaskDueTime}
-                              onChange={(event) =>
-                                setQuickTaskDueTime(event.target.value)
-                              }
-                            />
-                            <button
-                              type="submit"
-                              title="Добавить"
-                              aria-label="Добавить задачу"
-                            >
-                              💾
-                            </button>
-                            <button
-                              type="button"
-                              title="Отмена"
-                              aria-label="Отменить добавление задачи"
-                              onClick={() => setIsAddingBoardTask(false)}
-                            >
-                              ✕
-                            </button>
-                          </form>
-                        )}
+                        {status === "todo" && isAddingDayTask && quickTaskForm}
                         {visibleDayTasks
                           .filter((task) => task.status === status)
                           .map((task) =>
@@ -897,7 +886,7 @@ function App() {
                         {!visibleDayTasks.some(
                           (task) => task.status === status,
                         ) &&
-                          !(status === "todo" && isAddingBoardTask) && (
+                          !(status === "todo" && isAddingDayTask) && (
                             <p className="empty-column">Здесь пока пусто</p>
                           )}
                       </div>
@@ -1006,118 +995,87 @@ function App() {
                       })}
                     </div>
                   </section>
-                  <div className="calendar-day-panels">
-                    <section className="panel calendar-add-task-panel">
-                      <div className="section-heading">
-                        <h2>Новая задача на этот день</h2>
-                      </div>
-                      <form
-                        className="hub-form-row"
-                        onSubmit={addTaskForSelectedDay}
+                  <section className="panel calendar-tasks-panel">
+                    <div className="section-heading">
+                      <h2>Задачи дня</h2>
+                      <button
+                        className="board-add-button"
+                        aria-label="Добавить задачу на выбранный день"
+                        title="Добавить задачу"
+                        onClick={() => {
+                          setQuickTaskProject("");
+                          setIsAddingDayTask((isAdding) => !isAdding);
+                        }}
                       >
-                        <input
-                          aria-label="Название новой задачи"
-                          placeholder="Новая задача на этот день…"
-                          value={quickTaskTitle}
-                          onChange={(event) =>
-                            setQuickTaskTitle(event.target.value)
-                          }
-                          required
-                        />
-                        <input
-                          aria-label="Проект"
-                          placeholder="проект"
-                          value={quickTaskProject}
-                          onChange={(event) =>
-                            setQuickTaskProject(event.target.value)
-                          }
-                        />
-                        <input
-                          aria-label="Время дедлайна"
-                          title="время дедлайна"
-                          type="time"
-                          value={quickTaskDueTime}
-                          onChange={(event) =>
-                            setQuickTaskDueTime(event.target.value)
-                          }
-                        />
-                        <button className="primary-button" type="submit">
-                          Добавить
-                        </button>
-                      </form>
-                    </section>
-                    <section className="panel calendar-tasks-panel">
-                      <div className="section-heading">
-                        <h2>Задачи дня</h2>
-                        <strong>
-                          {calendarCompletedCount} из {calendarDayTasks.length}{" "}
-                          готово
-                        </strong>
-                      </div>
-                      {calendarDayTasks.length === 0 ? (
-                        <p className="empty-state">На этот день задач нет.</p>
-                      ) : (
-                        calendarDayTasks.map((task) =>
-                          taskRowDraft?.id === task.id ? (
-                            taskRowEditor
-                          ) : (
-                            <div
-                              className={`hub-day-row ${task.status === "done" ? "is-done" : ""}`}
-                              key={task.id}
+                        +
+                      </button>
+                      <strong>
+                        {calendarCompletedCount} из {calendarDayTasks.length}{" "}
+                        готово
+                      </strong>
+                    </div>
+                    {isAddingDayTask && quickTaskForm}
+                    {calendarDayTasks.length === 0 && !isAddingDayTask ? (
+                      <p className="empty-state">На этот день задач нет.</p>
+                    ) : (
+                      calendarDayTasks.map((task) =>
+                        taskRowDraft?.id === task.id ? (
+                          taskRowEditor
+                        ) : (
+                          <div
+                            className={`hub-day-row ${task.status === "done" ? "is-done" : ""}`}
+                            key={task.id}
+                          >
+                            <button
+                              className="mini-action"
+                              aria-label={
+                                task.status === "done"
+                                  ? "Вернуть задачу в работу"
+                                  : "Отметить задачу выполненной"
+                              }
+                              title={
+                                task.status === "done"
+                                  ? "Вернуть в работу"
+                                  : "Отметить выполненной"
+                              }
+                              onClick={() =>
+                                setTaskStatus(
+                                  task,
+                                  task.status === "done" ? "todo" : "done",
+                                )
+                              }
                             >
-                              <button
-                                className="mini-action"
-                                aria-label={
-                                  task.status === "done"
-                                    ? "Вернуть задачу в работу"
-                                    : "Отметить задачу выполненной"
-                                }
-                                title={
-                                  task.status === "done"
-                                    ? "Вернуть в работу"
-                                    : "Отметить выполненной"
-                                }
-                                onClick={() =>
-                                  setTaskStatus(
-                                    task,
-                                    task.status === "done" ? "todo" : "done",
-                                  )
-                                }
-                              >
-                                {task.status === "done" ? "↺" : "✓"}
-                              </button>
-                              <span className="hub-row-title">
-                                {task.title}
-                              </span>
-                              {task.project && (
-                                <span className="task-tag">{task.project}</span>
-                              )}
-                              {task.date !== selectedDate && (
-                                <span className="task-tag">📅 {task.date}</span>
-                              )}
-                              {task.dueTime && <small>🕑 {task.dueTime}</small>}
-                              <button
-                                className="mini-action"
-                                title="Редактировать"
-                                aria-label={`Редактировать задачу ${task.title}`}
-                                onClick={() => editTaskRow(task)}
-                              >
-                                ✎
-                              </button>
-                              <button
-                                className="mini-action danger-text"
-                                title="Удалить"
-                                aria-label={`Удалить задачу ${task.title}`}
-                                onClick={() => deleteTask(task)}
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          ),
-                        )
-                      )}
-                    </section>
-                  </div>
+                              {task.status === "done" ? "↺" : "✓"}
+                            </button>
+                            <span className="hub-row-title">{task.title}</span>
+                            {task.project && (
+                              <span className="task-tag">{task.project}</span>
+                            )}
+                            {task.date !== selectedDate && (
+                              <span className="task-tag">📅 {task.date}</span>
+                            )}
+                            {task.dueTime && <small>🕑 {task.dueTime}</small>}
+                            <button
+                              className="mini-action"
+                              title="Редактировать"
+                              aria-label={`Редактировать задачу ${task.title}`}
+                              onClick={() => editTaskRow(task)}
+                            >
+                              ✎
+                            </button>
+                            <button
+                              className="mini-action danger-text"
+                              title="Удалить"
+                              aria-label={`Удалить задачу ${task.title}`}
+                              onClick={() => deleteTask(task)}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ),
+                      )
+                    )}
+                  </section>
                   <section className="panel calendar-time-panel">
                     <div className="section-heading">
                       <h2>Учёт времени</h2>

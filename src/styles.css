@@ -398,7 +398,8 @@ textarea {
   border-radius: 15px;
   font-size: 12px;
 }
-.board-add-button {
+.board-add-button,
+.section-heading .board-add-button {
   display: inline-grid;
   flex: none;
   place-items: center;
@@ -416,6 +417,13 @@ textarea {
 }
 .board-add-button + .count {
   margin-left: 0;
+}
+.section-heading .board-add-button {
+  margin-left: auto;
+  box-shadow: none;
+}
+.calendar-tasks-panel .section-heading {
+  flex-wrap: wrap;
 }
 .card-stack {
   display: grid;
@@ -526,8 +534,7 @@ textarea {
   margin-bottom: 14px;
 }
 .calendar-page,
-.calendar-workspace,
-.calendar-day-panels {
+.calendar-workspace {
   display: grid;
   align-content: start;
   gap: 22px;
@@ -559,7 +566,6 @@ textarea {
   border-radius: 8px;
   font-weight: 700;
 }
-.calendar-day-panels > .panel,
 .calendar-workspace > .panel {
   margin-bottom: 0;
 }
@@ -1019,29 +1025,22 @@ textarea {
 
 @media (min-width: 3500px) and (min-aspect-ratio: 21 / 9) {
   .calendar-workspace {
-    grid-template-columns:
-      minmax(650px, 1.4fr) minmax(300px, 0.7fr)
-      minmax(300px, 0.7fr) minmax(550px, 1.2fr);
-  }
-
-  .calendar-day-panels {
-    display: contents;
+    grid-template-columns: minmax(650px, 1.4fr) minmax(300px, 0.7fr) minmax(
+        550px,
+        1.2fr
+      );
   }
 
   .calendar-panel {
     grid-column: 1;
   }
 
-  .calendar-add-task-panel {
+  .calendar-tasks-panel {
     grid-column: 2;
   }
 
-  .calendar-tasks-panel {
-    grid-column: 3;
-  }
-
   .calendar-time-panel {
-    grid-column: 4;
+    grid-column: 3;
   }
 }
 
