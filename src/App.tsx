@@ -1352,32 +1352,36 @@ function App() {
             )}
 
             {view === "statistics" && (
-              <div className="statistics-page">
-                <section className="panel statistics-period-panel">
-                  <div className="section-heading">
-                    <h2>{reportTitle(reportPeriod, reportStart, reportEnd)}</h2>
-                  </div>
-                  {periodTabs}
-                  <div className="stats-row">
-                    <div className="stat">
-                      <span>Запланировано</span>
-                      <strong>{reportTasks.length}</strong>
+              <>
+                {periodTabs}
+                <div className="statistics-page">
+                  <section className="panel statistics-period-panel">
+                    <div className="section-heading">
+                      <h2>
+                        {reportTitle(reportPeriod, reportStart, reportEnd)}
+                      </h2>
                     </div>
-                    <div className="stat">
-                      <span>Выполнено</span>
-                      <strong>{reportDone.length}</strong>
+                    <div className="stats-row">
+                      <div className="stat">
+                        <span>Запланировано</span>
+                        <strong>{reportTasks.length}</strong>
+                      </div>
+                      <div className="stat">
+                        <span>Выполнено</span>
+                        <strong>{reportDone.length}</strong>
+                      </div>
+                      <div className="stat">
+                        <span>Учтено времени</span>
+                        <strong>{minutesLabel(reportMinutes)}</strong>
+                      </div>
+                      <div className="stat">
+                        <span>Дней с записями</span>
+                        <strong>{reportDays}</strong>
+                      </div>
                     </div>
-                    <div className="stat">
-                      <span>Учтено времени</span>
-                      <strong>{minutesLabel(reportMinutes)}</strong>
-                    </div>
-                    <div className="stat">
-                      <span>Дней с записями</span>
-                      <strong>{reportDays}</strong>
-                    </div>
-                  </div>
-                </section>
-              </div>
+                  </section>
+                </div>
+              </>
             )}
 
             {view === "reports" && (
