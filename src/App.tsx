@@ -517,6 +517,27 @@ function App() {
     0,
   );
   const reportDays = new Set(reportEntries.map((entry) => entry.date)).size;
+  const completedTasksByProject = new Map<string, Task[]>();
+
+  for (const task of reportDone) {
+    const project = task.project.trim() || "Без проекта";
+    const projectTasks = completedTasksByProject.get(project) ?? [];
+    projectTasks.push(task);
+    completedTasksByProject.set(project, projectTasks);
+  }
+
+  const completedTaskLines = [...completedTasksByProject.entries()]
+    .sort(([firstProject], [secondProject]) =>
+      firstProject.localeCompare(secondProject, "ru"),
+    )
+    .flatMap(([project, projectTasks]) => [
+      `### ${project} (${projectTasks.length})`,
+      ...projectTasks.map(
+        (task) =>
+          `- ${task.title} (${task.completedAt ? dateKeyFromTimestamp(task.completedAt) : ""})`,
+      ),
+      "",
+    ]);
   const reportMarkdown = [
     `# My Work Day — ${reportTitle(reportPeriod, reportStart, reportEnd)}`,
     "",
@@ -526,11 +547,7 @@ function App() {
     `Учтено времени: ${minutesLabel(reportMinutes)}`,
     "",
     "## Выполнено",
-    ...reportDone.map(
-      (task) =>
-        `- ${task.title} (${task.completedAt ? dateKeyFromTimestamp(task.completedAt) : ""})`,
-    ),
-    "",
+    ...(completedTaskLines.length > 0 ? completedTaskLines : ["_нет_", ""]),
     "## Учёт времени",
     ...reportEntries.map(
       (entry) =>
