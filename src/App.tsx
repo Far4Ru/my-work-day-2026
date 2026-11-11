@@ -1687,19 +1687,26 @@ function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Alt") setAltPressed(true);
+      if (event.key === "Alt") event.preventDefault();
+      setAltPressed(event.key === "Alt" || event.altKey);
     };
     const onKeyUp = (event: KeyboardEvent) => {
-      if (event.key === "Alt") setAltPressed(false);
+      if (event.key === "Alt") event.preventDefault();
+      setAltPressed(event.key === "Alt" ? false : event.altKey);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      setAltPressed(event.altKey);
     };
     const onBlur = () => setAltPressed(false);
 
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
+    window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("blur", onBlur);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("keyup", onKeyUp, true);
+      window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("blur", onBlur);
     };
   }, []);
@@ -1849,9 +1856,9 @@ function App() {
     }
   }
 
-  function useEdge(direction: CarouselDirection) {
+  function useEdge(direction: CarouselDirection, altKey: boolean) {
     if (!activeBoardId) return;
-    const action = edgeAction(boards, activeBoardId, direction, altPressed);
+    const action = edgeAction(boards, activeBoardId, direction, altKey);
     if (action.kind === "create") {
       void createBoard(direction);
       return;
@@ -1981,7 +1988,8 @@ function App() {
             aria-label={label}
             title={label}
             disabled={transition !== null}
-            onClick={() => useEdge(direction)}
+            onPointerDown={(event) => setAltPressed(event.altKey)}
+            onClick={(event) => useEdge(direction, event.altKey)}
           >
             <Icon
               name={
