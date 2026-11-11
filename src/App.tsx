@@ -12,6 +12,8 @@ import {
   mondayOf,
   parseDate,
 } from "./dates";
+import { edgeAction } from "./boardNavigation";
+import type { CarouselDirection } from "./boardNavigation";
 import { database } from "./database";
 import type {
   ActiveTimer,
@@ -101,21 +103,20 @@ function hasEditableClockTimes(entry: TimeEntry): boolean {
 
 interface BoardContentProps {
   board: Board;
-  boardNumber: number;
-  boardCount: number;
-  onCreateBoard: () => void;
   onRenameBoard: (id: string, name: string) => Promise<boolean>;
+  onDeleteBoard: (id: string) => Promise<boolean>;
 }
 
 function BoardContent({
   board,
-  boardNumber,
-  boardCount,
-  onCreateBoard,
   onRenameBoard,
+  onDeleteBoard,
 }: BoardContentProps) {
   const boardDatabase = useMemo(() => database.forBoard(board.id), [board.id]);
   const [boardNameDraft, setBoardNameDraft] = useState(board.name);
+  const [editingBoardName, setEditingBoardName] = useState(false);
+  const [confirmingBoardDelete, setConfirmingBoardDelete] = useState(false);
+  const boardNameInput = useRef<HTMLInputElement>(null);
   const [view, setView] = useState<View>("tasks");
   const [selectedDate, setSelectedDate] = useState(() => dateKey(new Date()));
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -149,17 +150,29 @@ function BoardContent({
     setBoardNameDraft(board.name);
   }, [board.name]);
 
-  function saveBoardName(name: string) {
-    const trimmed = name.trim();
+  useEffect(() => {
+    if (editingBoardName) {
+      boardNameInput.current?.focus();
+      boardNameInput.current?.select();
+    }
+  }, [editingBoardName]);
+
+  async function saveBoardName(): Promise<void> {
+    const trimmed = boardNameDraft.trim();
     if (!trimmed) {
       setBoardNameDraft(board.name);
+      setEditingBoardName(false);
       return;
     }
-    if (trimmed === board.name) return;
+    if (trimmed === board.name) {
+      setEditingBoardName(false);
+      return;
+    }
 
-    void onRenameBoard(board.id, trimmed).then((saved) => {
-      if (!saved) setBoardNameDraft(board.name);
-    });
+    const saved = await onRenameBoard(board.id, trimmed);
+    if (saved) {
+      setEditingBoardName(false);
+    }
   }
 
   useEffect(() => {
@@ -885,33 +898,42 @@ function BoardContent({
           </span>
         </div>
         <div className="board-identity">
-          <span className="board-identity-label">
-            Доска {boardNumber} из {boardCount}
-          </span>
           <div className="board-identity-row">
             <input
+              ref={boardNameInput}
               aria-label="Название доски"
               title="Название доски"
               maxLength={80}
+              readOnly={!editingBoardName}
               value={boardNameDraft}
               onChange={(event) => setBoardNameDraft(event.target.value)}
-              onBlur={(event) => saveBoardName(event.currentTarget.value)}
               onKeyDown={(event) => {
-                if (event.key === "Enter") event.currentTarget.blur();
+                if (event.key === "Enter" && editingBoardName) {
+                  void saveBoardName();
+                }
                 if (event.key === "Escape") {
-                  event.currentTarget.value = board.name;
                   setBoardNameDraft(board.name);
-                  event.currentTarget.blur();
+                  setEditingBoardName(false);
                 }
               }}
             />
             <button
               type="button"
-              aria-label="Создать новую доску"
-              title="Создать новую доску"
-              onClick={onCreateBoard}
+              aria-label={
+                editingBoardName
+                  ? "Сохранить название"
+                  : "Редактировать название"
+              }
+              title={editingBoardName ? "Сохранить" : "Редактировать"}
+              onClick={() => {
+                if (editingBoardName) {
+                  void saveBoardName();
+                } else {
+                  setEditingBoardName(true);
+                }
+              }}
             >
-              <Icon name="plus" />
+              <Icon name={editingBoardName ? "save" : "edit"} />
             </button>
           </div>
         </div>
@@ -934,6 +956,35 @@ function BoardContent({
             </button>
           ))}
         </nav>
+        <div className="board-delete-area">
+          {confirmingBoardDelete ? (
+            <div className="board-delete-confirmation">
+              <span>Удалить доску и все её данные?</span>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => void onDeleteBoard(board.id)}
+                >
+                  Удалить
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingBoardDelete(false)}
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              className="board-delete-button"
+              type="button"
+              onClick={() => setConfirmingBoardDelete(true)}
+            >
+              Удалить доску
+            </button>
+          )}
+        </div>
       </aside>
 
       <main className="main-content">
@@ -1619,8 +1670,6 @@ function BoardContent({
   );
 }
 
-type CarouselDirection = -1 | 1;
-
 interface BoardTransition {
   fromId: string;
   toId: string;
@@ -1633,7 +1682,27 @@ function App() {
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
   const [transition, setTransition] = useState<BoardTransition | null>(null);
   const [boardError, setBoardError] = useState("");
+  const [altPressed, setAltPressed] = useState(false);
   const navigating = useRef(false);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Alt") setAltPressed(true);
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key === "Alt") setAltPressed(false);
+    };
+    const onBlur = () => setAltPressed(false);
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1742,9 +1811,10 @@ function App() {
     if (navigating.current || !activeBoardId) return;
 
     navigating.current = true;
-    const positions = boards.map((board) => board.position);
-    const position =
-      direction === 1 ? Math.max(...positions) + 1 : Math.min(...positions) - 1;
+    const currentIndex = boards.findIndex(
+      (board) => board.id === activeBoardId,
+    );
+    const insertIndex = currentIndex + (direction === 1 ? 1 : 0);
     let number = boards.length + 1;
     while (boards.some((board) => board.name === `Доска ${number}`)) {
       number += 1;
@@ -1753,17 +1823,12 @@ function App() {
     const board: Board = {
       id: crypto.randomUUID(),
       name: `Доска ${number}`,
-      position,
+      position: insertIndex,
     };
 
     try {
-      await database.saveBoard(board);
-      await database.saveSelectedBoardId(board.id);
-      setBoards((current) =>
-        [...current, board].sort(
-          (first, second) => first.position - second.position,
-        ),
-      );
+      const updatedBoards = await database.insertBoard(board, insertIndex);
+      setBoards(updatedBoards);
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
       }
@@ -1785,17 +1850,61 @@ function App() {
   }
 
   function useEdge(direction: CarouselDirection) {
-    if (boards.length === 1) {
+    if (!activeBoardId) return;
+    const action = edgeAction(boards, activeBoardId, direction, altPressed);
+    if (action.kind === "create") {
       void createBoard(direction);
       return;
     }
 
-    const currentIndex = boards.findIndex(
-      (board) => board.id === activeBoardId,
-    );
-    const nextIndex =
-      (currentIndex + direction + boards.length) % boards.length;
-    void selectBoard(boards[nextIndex].id, direction);
+    void selectBoard(action.targetId, direction);
+  }
+
+  async function removeBoard(id: string): Promise<boolean> {
+    if (navigating.current || id !== activeBoardId) return false;
+
+    navigating.current = true;
+    const currentIndex = boards.findIndex((board) => board.id === id);
+    const neighbor = boards[currentIndex - 1] ?? boards[currentIndex + 1];
+    const replacement: Board | undefined = neighbor
+      ? undefined
+      : {
+          id: crypto.randomUUID(),
+          name: "Моя доска",
+          position: 0,
+        };
+    const nextBoardId = neighbor?.id ?? replacement!.id;
+
+    try {
+      await database.deleteBoard(id, nextBoardId, replacement);
+      setBoards((current) => [
+        ...current.filter((board) => board.id !== id),
+        ...(replacement ? [replacement] : []),
+      ]);
+      setActiveBoardId(nextBoardId);
+      setBoardError("");
+      return true;
+    } catch {
+      setBoardError("Не удалось полностью удалить доску.");
+      try {
+        const [storedBoards, selectedId] = await Promise.all([
+          database.boards(),
+          database.selectedBoardId(),
+        ]);
+        setBoards(storedBoards);
+        if (!storedBoards.some((board) => board.id === id)) {
+          const selectedBoard = storedBoards.find(
+            (board) => board.id === selectedId,
+          );
+          setActiveBoardId(selectedBoard?.id ?? storedBoards[0]?.id ?? null);
+        }
+      } catch {
+        setBoardError("Не удалось загрузить список досок после удаления.");
+      }
+      return false;
+    } finally {
+      navigating.current = false;
+    }
   }
 
   const activeBoard = boards.find((board) => board.id === activeBoardId);
@@ -1840,12 +1949,8 @@ function App() {
             >
               <BoardContent
                 board={board}
-                boardNumber={
-                  boards.findIndex((item) => item.id === board.id) + 1
-                }
-                boardCount={boards.length}
-                onCreateBoard={() => void createBoard(1)}
                 onRenameBoard={renameBoard}
+                onDeleteBoard={removeBoard}
               />
             </div>
           );
@@ -1854,38 +1959,37 @@ function App() {
 
       {([-1, 1] as const).map((direction) => {
         const isLeft = direction === -1;
-        const hasMultipleBoards = boards.length > 1;
+        const action = edgeAction(
+          boards,
+          activeBoard.id,
+          direction,
+          altPressed,
+        );
+        const label =
+          action.kind === "create"
+            ? isLeft
+              ? "Добавить доску слева"
+              : "Добавить доску справа"
+            : isLeft
+              ? "Предыдущая доска"
+              : "Следующая доска";
         return (
           <button
             key={direction}
             type="button"
             className={`board-edge-button ${isLeft ? "board-edge-button--left" : "board-edge-button--right"}`}
-            aria-label={
-              hasMultipleBoards
-                ? isLeft
-                  ? "Предыдущая доска"
-                  : "Следующая доска"
-                : isLeft
-                  ? "Добавить доску слева"
-                  : "Добавить доску справа"
-            }
-            title={
-              hasMultipleBoards
-                ? isLeft
-                  ? "Предыдущая доска"
-                  : "Следующая доска"
-                : "Добавить доску"
-            }
+            aria-label={label}
+            title={label}
             disabled={transition !== null}
             onClick={() => useEdge(direction)}
           >
             <Icon
               name={
-                hasMultipleBoards
-                  ? isLeft
+                action.kind === "create"
+                  ? "plus"
+                  : isLeft
                     ? "chevron-left"
                     : "chevron-right"
-                  : "plus"
               }
             />
           </button>

@@ -108,4 +108,47 @@ test("new boards keep tasks and timers separate without losing legacy data", asy
 
   await database.saveSelectedBoardId("second");
   assert.equal(await database.selectedBoardId(), "second");
+
+  const orderedBoards = await database.insertBoard(
+    { id: "between", name: "Между", position: 1 },
+    1,
+  );
+  assert.deepEqual(
+    orderedBoards.map((board) => [board.id, board.position]),
+    [
+      ["main", 0],
+      ["between", 1],
+      ["second", 2],
+    ],
+  );
+  assert.deepEqual(
+    (await database.boards()).map((board) => board.id),
+    ["main", "between", "second"],
+  );
+  assert.equal(await database.selectedBoardId(), "between");
+
+  await database.deleteBoard("between", "main");
+  assert.equal(await database.selectedBoardId(), "main");
+  assert.deepEqual(
+    (await database.boards()).map((board) => board.id),
+    ["main", "second"],
+  );
+
+  await database.deleteBoard("second", "main");
+  assert.deepEqual(
+    (await database.boards()).map((board) => board.id),
+    ["main"],
+  );
+  assert.deepEqual(await main.tasks(), [task("legacy-task")]);
+
+  await database.deleteBoard("main", "replacement", {
+    id: "replacement",
+    name: "Моя доска",
+    position: 0,
+  });
+  assert.deepEqual(await database.boards(), [
+    { id: "replacement", name: "Моя доска", position: 0 },
+  ]);
+  assert.equal(await database.selectedBoardId(), "replacement");
+  assert.deepEqual(await main.tasks(), []);
 });

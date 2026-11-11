@@ -190,6 +190,69 @@ async function saveBoard(board: Board): Promise<void> {
   }
 }
 
+async function insertBoard(board: Board, index: number): Promise<Board[]> {
+  const currentBoards = await readBoards();
+  const orderedBoards = [...currentBoards];
+  orderedBoards.splice(index, 0, board);
+  const updatedBoards = orderedBoards.map((item, position) => ({
+    ...item,
+    position,
+  }));
+
+  const connection = await openRegistry();
+  try {
+    const transaction = connection.transaction(
+      ["boards", "settings"],
+      "readwrite",
+    );
+    const store = transaction.objectStore("boards");
+    updatedBoards.forEach((item) => store.put(item));
+    transaction
+      .objectStore("settings")
+      .put({ id: "selection", boardId: board.id });
+    await transactionDone(transaction, "Не удалось добавить доску");
+    return updatedBoards;
+  } finally {
+    connection.close();
+  }
+}
+
+async function deleteBoard(
+  boardId: string,
+  nextBoardId: string,
+  replacement?: Board,
+): Promise<void> {
+  const connection = await openRegistry();
+  try {
+    const transaction = connection.transaction(
+      ["boards", "settings"],
+      "readwrite",
+    );
+    const store = transaction.objectStore("boards");
+    if (replacement) store.put(replacement);
+    store.delete(boardId);
+    transaction
+      .objectStore("settings")
+      .put({ id: "selection", boardId: nextBoardId });
+    await transactionDone(transaction, "Не удалось удалить доску");
+  } finally {
+    connection.close();
+  }
+
+  const databaseName =
+    boardId === DEFAULT_BOARD_ID
+      ? DATA_DATABASE_NAME
+      : `${DATA_DATABASE_NAME}-board-${boardId}`;
+  await new Promise<void>((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(databaseName);
+    request.onsuccess = () => resolve();
+    request.onerror = () =>
+      reject(request.error ?? new Error("Не удалось очистить данные доски"));
+    request.onblocked = () =>
+      reject(new Error("База данных доски занята в другой вкладке"));
+  });
+}
+
 async function selectedBoardId(): Promise<string | undefined> {
   const connection = await openRegistry();
   try {
@@ -222,6 +285,8 @@ export const database = {
   forBoard,
   boards: readBoards,
   saveBoard,
+  insertBoard,
+  deleteBoard,
   selectedBoardId,
   saveSelectedBoardId,
 };

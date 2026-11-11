@@ -243,15 +243,6 @@ button:hover:not(:disabled) {
 .board-identity {
   margin: -14px 6px 24px;
 }
-.board-identity-label {
-  display: block;
-  margin-bottom: 6px;
-  color: #68786d;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 .board-identity-row {
   display: flex;
   align-items: center;
@@ -268,6 +259,11 @@ button:hover:not(:disabled) {
   font-size: 13px;
   font-weight: 800;
 }
+.board-identity-row input[readonly] {
+  background: transparent;
+  border-color: transparent;
+  cursor: default;
+}
 .board-identity-row button {
   display: grid;
   flex: none;
@@ -282,6 +278,39 @@ button:hover:not(:disabled) {
 .board-identity-row button .icon {
   width: 16px;
   height: 16px;
+}
+.board-delete-area {
+  margin-top: auto;
+  padding: 14px 6px 0;
+}
+.board-delete-button {
+  padding: 0;
+  color: #a23d39;
+  background: none;
+  border: 0;
+  font-size: 11px;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.board-delete-confirmation {
+  display: grid;
+  gap: 8px;
+  color: #9d3935;
+  font-size: 11px;
+}
+.board-delete-confirmation div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.board-delete-confirmation button {
+  padding: 4px 6px;
+  color: #9d3935;
+  background: #fffefa;
+  border: 1px solid #c78d85;
+  border-radius: 4px;
+  font-size: 11px;
 }
 .icon {
   display: inline-block;
@@ -1021,6 +1050,10 @@ textarea {
   }
   .board-identity-row {
     max-width: 280px;
+  }
+  .board-delete-area {
+    margin-top: 8px;
+    padding: 0;
   }
   .board-edge-button {
     width: 54px;
