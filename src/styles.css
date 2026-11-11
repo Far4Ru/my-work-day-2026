@@ -611,14 +611,6 @@ textarea {
   background: #e7f0e9;
   box-shadow: inset 0 0 0 2px #60866b;
 }
-.report-lists {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 27px;
-}
-.report-lists h3 {
-  margin-bottom: 14px;
-}
 .calendar-page,
 .calendar-workspace {
   display: grid;
@@ -731,23 +723,6 @@ textarea {
 .calendar-time-list {
   margin-bottom: 0;
 }
-.report-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 11px 0;
-  border-top: 1px dashed #c2cbbf;
-  font-size: 13px;
-}
-.report-row > span {
-  min-width: 0;
-  margin-right: auto;
-  overflow-wrap: anywhere;
-}
-.report-row small {
-  color: #87958a;
-  white-space: nowrap;
-}
 .period-tabs {
   display: flex;
   gap: 7px;
@@ -770,6 +745,19 @@ textarea {
   font-size: 23px;
   text-transform: capitalize;
 }
+.report-markdown {
+  display: block;
+  width: 100%;
+  min-height: clamp(280px, 48vh, 640px);
+  padding: 18px 20px;
+  background: #fffefa;
+  border-color: #8c988e;
+  border-radius: 2px;
+  font-family: Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre;
+}
 .statistics-page {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
@@ -779,14 +767,6 @@ textarea {
 .statistics-page > .panel {
   min-width: 0;
   margin-bottom: 0;
-}
-.report-row small {
-  display: block;
-  margin-top: 4px;
-}
-.report-row strong {
-  color: #4a7d58;
-  white-space: nowrap;
 }
 .error {
   margin-bottom: 18px;
@@ -911,9 +891,6 @@ textarea {
   }
   .stat span {
     font-size: 11px;
-  }
-  .report-lists {
-    grid-template-columns: 1fr;
   }
   .calendar-day {
     min-height: 67px;
@@ -1062,18 +1039,6 @@ textarea {
 
   .calendar-day {
     min-height: clamp(50px, 7vh, 78px);
-  }
-
-  .report-lists > div {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    align-content: start;
-    column-gap: 22px;
-  }
-
-  .report-lists h3,
-  .report-lists .empty-state {
-    grid-column: 1 / -1;
   }
 }
 

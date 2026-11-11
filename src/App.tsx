@@ -517,39 +517,26 @@ function App() {
     0,
   );
   const reportDays = new Set(reportEntries.map((entry) => entry.date)).size;
-
-  function exportReport() {
-    const title = reportTitle(reportPeriod, reportStart, reportEnd);
-    const lines = [
-      `# My Work Day — ${title}`,
-      "",
-      `Период: ${reportStart} — ${reportEnd}`,
-      `Запланировано задач: ${reportTasks.length}`,
-      `Выполнено задач: ${reportDone.length}`,
-      `Учтено времени: ${minutesLabel(reportMinutes)}`,
-      "",
-      "## Выполнено",
-      ...reportDone.map(
-        (task) =>
-          `- ${task.title} (${task.completedAt ? dateKeyFromTimestamp(task.completedAt) : ""})`,
-      ),
-      "",
-      "## Учёт времени",
-      ...reportEntries.map(
-        (entry) =>
-          `- ${entry.date}: ${entry.title} — ${minutesLabel(entry.minutes)}`,
-      ),
-    ];
-    const content = lines.join("\n");
-    const url = URL.createObjectURL(
-      new Blob([content], { type: "text/markdown;charset=utf-8" }),
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `todo-did-${reportPeriod}-${reportStart}.md`;
-    link.click();
-    URL.revokeObjectURL(url);
-  }
+  const reportMarkdown = [
+    `# My Work Day — ${reportTitle(reportPeriod, reportStart, reportEnd)}`,
+    "",
+    `Период: ${reportStart} — ${reportEnd}`,
+    `Запланировано задач: ${reportTasks.length}`,
+    `Выполнено задач: ${reportDone.length}`,
+    `Учтено времени: ${minutesLabel(reportMinutes)}`,
+    "",
+    "## Выполнено",
+    ...reportDone.map(
+      (task) =>
+        `- ${task.title} (${task.completedAt ? dateKeyFromTimestamp(task.completedAt) : ""})`,
+    ),
+    "",
+    "## Учёт времени",
+    ...reportEntries.map(
+      (entry) =>
+        `- ${entry.date}: ${entry.title} — ${minutesLabel(entry.minutes)}`,
+    ),
+  ].join("\n");
 
   const calendarStart = mondayOf(
     dateKey(
@@ -1556,50 +1543,14 @@ function App() {
                       <p className="eyebrow">ИТОГИ ПЕРИОДА</p>
                       <h2>Отчёт за период</h2>
                     </div>
-                    <button onClick={exportReport}>Скачать .md</button>
                   </div>
-                  <div className="report-lists">
-                    <div>
-                      <h3>Выполненные задачи</h3>
-                      {reportDone.length === 0 ? (
-                        <p className="empty-state">
-                          Пока нет выполненных задач.
-                        </p>
-                      ) : (
-                        reportDone.map((task) => (
-                          <div className="report-row" key={task.id}>
-                            <span>{task.title}</span>
-                            <small>
-                              {task.completedAt
-                                ? dateKeyFromTimestamp(task.completedAt)
-                                : ""}
-                            </small>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                    <div>
-                      <h3>Записи времени</h3>
-                      {reportEntries.length === 0 ? (
-                        <p className="empty-state">Записей времени нет.</p>
-                      ) : (
-                        reportEntries.map((entry) => (
-                          <div className="report-row" key={entry.id}>
-                            <span>
-                              {entry.title}
-                              <small>
-                                {formatDate(entry.date, {
-                                  day: "numeric",
-                                  month: "short",
-                                })}
-                              </small>
-                            </span>
-                            <strong>{minutesLabel(entry.minutes)}</strong>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
+                  <textarea
+                    className="report-markdown"
+                    aria-label="Отчёт в формате Markdown"
+                    value={reportMarkdown}
+                    readOnly
+                    spellCheck={false}
+                  />
                 </section>
               </>
             )}
