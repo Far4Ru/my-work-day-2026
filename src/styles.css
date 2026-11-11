@@ -156,14 +156,6 @@ button:hover:not(:disabled) {
   border-color: #65756b;
   box-shadow: none;
 }
-.sidebar-note {
-  margin-top: auto;
-  padding: 15px 8px 0;
-  color: #819087;
-  font-size: 11px;
-  line-height: 1.5;
-}
-
 .main-content {
   flex: 1;
   width: 100%;
@@ -828,8 +820,7 @@ textarea {
     height: 31px;
     font-size: 19px;
   }
-  .brand small,
-  .sidebar-note {
+  .brand small {
     display: none;
   }
   .navigation {
@@ -948,10 +939,6 @@ textarea {
   .page-header {
     margin-bottom: 10px;
     padding-bottom: 10px;
-  }
-
-  .page-header .eyebrow {
-    margin-bottom: 4px;
   }
 
   .page-header h1 {

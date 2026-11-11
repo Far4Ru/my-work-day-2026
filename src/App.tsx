@@ -409,15 +409,11 @@ function App() {
             </button>
           ))}
         </nav>
-        <div className="sidebar-note">
-          Данные хранятся в этом браузере с помощью IndexedDB.
-        </div>
       </aside>
 
       <main className="main-content" ref={contentRef}>
         <header className="page-header">
           <div>
-            <p className="eyebrow">TODO / DID</p>
             <h1>
               {view === "tasks"
                 ? "Задачи дня"
