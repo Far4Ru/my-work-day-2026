@@ -25,7 +25,7 @@ test("edge controls navigate to neighbors and create at list ends", () => {
   });
 });
 
-test("Alt swaps create and navigation, wrapping only at the ends", () => {
+test("Shift swaps create and navigation, wrapping only at the ends", () => {
   assert.deepEqual(edgeAction(boards, "middle", -1, true), {
     kind: "create",
   });

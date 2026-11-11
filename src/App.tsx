@@ -1682,22 +1682,20 @@ function App() {
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
   const [transition, setTransition] = useState<BoardTransition | null>(null);
   const [boardError, setBoardError] = useState("");
-  const [altPressed, setAltPressed] = useState(false);
+  const [shiftPressed, setShiftPressed] = useState(false);
   const navigating = useRef(false);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Alt") event.preventDefault();
-      setAltPressed(event.key === "Alt" || event.altKey);
+      setShiftPressed(event.key === "Shift" || event.shiftKey);
     };
     const onKeyUp = (event: KeyboardEvent) => {
-      if (event.key === "Alt") event.preventDefault();
-      setAltPressed(event.key === "Alt" ? false : event.altKey);
+      setShiftPressed(event.key === "Shift" ? false : event.shiftKey);
     };
     const onPointerMove = (event: PointerEvent) => {
-      setAltPressed(event.altKey);
+      setShiftPressed(event.shiftKey);
     };
-    const onBlur = () => setAltPressed(false);
+    const onBlur = () => setShiftPressed(false);
 
     window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener("keyup", onKeyUp, true);
@@ -1856,9 +1854,9 @@ function App() {
     }
   }
 
-  function useEdge(direction: CarouselDirection, altKey: boolean) {
+  function useEdge(direction: CarouselDirection, shiftKey: boolean) {
     if (!activeBoardId) return;
-    const action = edgeAction(boards, activeBoardId, direction, altKey);
+    const action = edgeAction(boards, activeBoardId, direction, shiftKey);
     if (action.kind === "create") {
       void createBoard(direction);
       return;
@@ -1970,7 +1968,7 @@ function App() {
           boards,
           activeBoard.id,
           direction,
-          altPressed,
+          shiftPressed,
         );
         const label =
           action.kind === "create"
@@ -1986,10 +1984,10 @@ function App() {
             type="button"
             className={`board-edge-button ${isLeft ? "board-edge-button--left" : "board-edge-button--right"}`}
             aria-label={label}
-            title={label}
+            title={`${label} — Shift меняет действие`}
             disabled={transition !== null}
-            onPointerDown={(event) => setAltPressed(event.altKey)}
-            onClick={(event) => useEdge(direction, event.altKey)}
+            onPointerDown={(event) => setShiftPressed(event.shiftKey)}
+            onClick={(event) => useEdge(direction, event.shiftKey)}
           >
             <Icon
               name={

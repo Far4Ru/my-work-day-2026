@@ -9,7 +9,7 @@ export function edgeAction(
   boards: Board[],
   activeBoardId: string,
   direction: CarouselDirection,
-  altPressed: boolean,
+  alternatePressed: boolean,
 ): EdgeAction {
   const currentIndex = boards.findIndex((board) => board.id === activeBoardId);
   if (currentIndex < 0 || boards.length === 1) {
@@ -18,7 +18,7 @@ export function edgeAction(
 
   const nextIndex = currentIndex + direction;
   const hasNeighbor = nextIndex >= 0 && nextIndex < boards.length;
-  if (hasNeighbor !== altPressed) {
+  if (hasNeighbor !== alternatePressed) {
     const targetIndex = hasNeighbor
       ? nextIndex
       : direction === -1
