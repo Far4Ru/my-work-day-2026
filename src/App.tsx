@@ -12,7 +12,7 @@ import { database } from "./database";
 import type { ActiveTimer, ReportPeriod, Task, TimeEntry } from "./model";
 import { entriesFromTimer } from "./timer";
 
-type View = "tasks" | "time" | "calendar" | "reports";
+type View = "tasks" | "calendar" | "reports";
 
 const weekDays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
@@ -69,7 +69,8 @@ function App() {
   const [timerTaskId, setTimerTaskId] = useState("");
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>("week");
   const timerBusy = useRef(false);
-  const contentRef = useRef<HTMLElement>(null);
+  const taskEditorRef = useRef<HTMLElement>(null);
+  const timePanelRef = useRef<HTMLElement>(null);
   const currentDay = dateKey(new Date(now));
 
   useEffect(() => {
@@ -148,6 +149,10 @@ function App() {
   const activeSeconds = timer
     ? Math.max(0, Math.floor((now - Date.parse(timer.startedAt)) / 1000))
     : 0;
+  const timerTasks = tasks.filter(
+    (task) => task.date === currentDay && task.status !== "done",
+  );
+  const selectedTimerTask = timerTasks.find((task) => task.id === timerTaskId);
 
   function resetTaskForm() {
     setTaskTitle("");
@@ -159,7 +164,7 @@ function App() {
     setEditingTaskId(null);
   }
 
-  function editTask(task: Task) {
+  function editTask(task: Task, targetView: View = "tasks") {
     setTaskTitle(task.title);
     setTaskProject(task.project);
     setTaskNote(task.note);
@@ -168,8 +173,13 @@ function App() {
     setTaskDate(task.date);
     setEditingTaskId(task.id);
     setSelectedDate(task.date);
-    setView("tasks");
-    contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    setView(targetView);
+    window.requestAnimationFrame(() =>
+      taskEditorRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      }),
+    );
   }
 
   function saveTask(event: React.FormEvent<HTMLFormElement>) {
@@ -183,7 +193,7 @@ function App() {
       title,
       project: taskProject.trim(),
       note: taskNote.trim(),
-      date: taskDate,
+      date: view === "calendar" && !editingTaskId ? selectedDate : taskDate,
       dueTime: taskDueTime,
       estimateMinutes: Math.max(0, Number(taskEstimate) || 0),
       status: existing?.status ?? "todo",
@@ -221,7 +231,7 @@ function App() {
       id: existing?.id ?? crypto.randomUUID(),
       taskId: entryTaskId || null,
       title: entryTitle.trim(),
-      date: entryDate,
+      date: editingEntryId ? entryDate : selectedDate,
       minutes,
       createdAt: existing?.createdAt ?? new Date().toISOString(),
     };
@@ -247,8 +257,13 @@ function App() {
     setEntryDate(entry.date);
     setEditingEntryId(entry.id);
     setSelectedDate(entry.date);
-    setView("time");
-    contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    setView("calendar");
+    window.requestAnimationFrame(() =>
+      timePanelRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      }),
+    );
   }
 
   function deleteEntry(entry: TimeEntry) {
@@ -258,8 +273,8 @@ function App() {
 
   function startTimer(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (timerBusy.current || timer) return;
-    const linkedTask = tasks.find((task) => task.id === timerTaskId);
+    if (timerBusy.current || timer || selectedDate !== currentDay) return;
+    const linkedTask = selectedTimerTask;
     const title = timerTitle.trim() || linkedTask?.title || "";
     if (!title) return;
 
@@ -381,6 +396,88 @@ function App() {
     );
   }
 
+  const taskEditor = (
+    <section className="panel task-editor-panel" ref={taskEditorRef}>
+      <div className="section-heading">
+        <h2>
+          {editingTaskId
+            ? "Редактировать задачу"
+            : view === "calendar"
+              ? "Новая задача на этот день"
+              : "Новая задача"}
+        </h2>
+      </div>
+      <form onSubmit={saveTask} className="task-form">
+        {(view !== "calendar" || editingTaskId) && (
+          <label>
+            Дата задачи
+            <input
+              type="date"
+              value={taskDate}
+              onChange={(event) => setTaskDate(event.target.value)}
+              required
+            />
+          </label>
+        )}
+        <label className="wide-field">
+          Название
+          <input
+            value={taskTitle}
+            onChange={(event) => setTaskTitle(event.target.value)}
+            placeholder="Что нужно сделать?"
+            required
+          />
+        </label>
+        <label>
+          Проект
+          <input
+            value={taskProject}
+            onChange={(event) => setTaskProject(event.target.value)}
+            placeholder="Необязательно"
+          />
+        </label>
+        <label>
+          Время срока
+          <input
+            type="time"
+            value={taskDueTime}
+            onChange={(event) => setTaskDueTime(event.target.value)}
+          />
+        </label>
+        <label>
+          План, минут
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={taskEstimate}
+            onChange={(event) => setTaskEstimate(event.target.value)}
+            placeholder="Необязательно"
+          />
+        </label>
+        <label className="wide-field">
+          Заметка
+          <textarea
+            value={taskNote}
+            onChange={(event) => setTaskNote(event.target.value)}
+            placeholder="Детали задачи"
+            rows={2}
+          />
+        </label>
+        <div className="form-actions">
+          <button type="submit" className="primary-button">
+            {editingTaskId ? "Сохранить" : "Добавить задачу"}
+          </button>
+          {editingTaskId && (
+            <button type="button" onClick={resetTaskForm}>
+              Отмена
+            </button>
+          )}
+        </div>
+      </form>
+    </section>
+  );
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -394,7 +491,6 @@ function App() {
           {(
             [
               ["tasks", "Задачи", "☑"],
-              ["time", "Время", "◷"],
               ["calendar", "Календарь", "▦"],
               ["reports", "Отчёты", "▤"],
             ] as const
@@ -411,17 +507,15 @@ function App() {
         </nav>
       </aside>
 
-      <main className="main-content" ref={contentRef}>
+      <main className="main-content">
         <header className="page-header">
           <div>
             <h1>
               {view === "tasks"
                 ? "Задачи дня"
-                : view === "time"
-                  ? "Учёт времени"
-                  : view === "calendar"
-                    ? "Календарь"
-                    : "Отчёт"}
+                : view === "calendar"
+                  ? "Календарь"
+                  : "Отчёт"}
             </h1>
             <p className="subtitle">
               {view === "reports"
@@ -498,87 +592,7 @@ function App() {
                       </div>
                     </div>
                   </div>
-                  <section className="panel task-editor-panel">
-                    <div className="section-heading">
-                      <h2>
-                        {editingTaskId
-                          ? "Редактировать задачу"
-                          : "Новая задача"}
-                      </h2>
-                    </div>
-                    <form onSubmit={saveTask} className="task-form">
-                      <label>
-                        Дата задачи
-                        <input
-                          type="date"
-                          value={taskDate}
-                          onChange={(event) => setTaskDate(event.target.value)}
-                          required
-                        />
-                      </label>
-                      <label className="wide-field">
-                        Название
-                        <input
-                          value={taskTitle}
-                          onChange={(event) => setTaskTitle(event.target.value)}
-                          placeholder="Что нужно сделать?"
-                          required
-                        />
-                      </label>
-                      <label>
-                        Проект
-                        <input
-                          value={taskProject}
-                          onChange={(event) =>
-                            setTaskProject(event.target.value)
-                          }
-                          placeholder="Необязательно"
-                        />
-                      </label>
-                      <label>
-                        Время срока
-                        <input
-                          type="time"
-                          value={taskDueTime}
-                          onChange={(event) =>
-                            setTaskDueTime(event.target.value)
-                          }
-                        />
-                      </label>
-                      <label>
-                        План, минут
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={taskEstimate}
-                          onChange={(event) =>
-                            setTaskEstimate(event.target.value)
-                          }
-                          placeholder="Необязательно"
-                        />
-                      </label>
-                      <label className="wide-field">
-                        Заметка
-                        <textarea
-                          value={taskNote}
-                          onChange={(event) => setTaskNote(event.target.value)}
-                          placeholder="Детали задачи"
-                          rows={2}
-                        />
-                      </label>
-                      <div className="form-actions">
-                        <button type="submit" className="primary-button">
-                          {editingTaskId ? "Сохранить" : "Добавить задачу"}
-                        </button>
-                        {editingTaskId && (
-                          <button type="button" onClick={resetTaskForm}>
-                            Отмена
-                          </button>
-                        )}
-                      </div>
-                    </form>
-                  </section>
+                  {taskEditor}
                   {projects.length > 0 && (
                     <section className="panel project-filter">
                       <label>
@@ -678,277 +692,121 @@ function App() {
               </div>
             )}
 
-            {view === "time" && (
-              <div className="two-column">
-                <div className="column-flow">
-                  <section className="panel timer-panel">
-                    <div className="section-heading">
-                      <h2>Таймер</h2>
-                      <span className="pill">
-                        {timer ? "Идёт запись" : "Готов к работе"}
-                      </span>
-                    </div>
-                    {timer ? (
-                      <div className="running-timer">
-                        <strong>
-                          {String(Math.floor(activeSeconds / 3600)).padStart(
-                            2,
-                            "0",
-                          )}
-                          :
-                          {String(Math.floor(activeSeconds / 60) % 60).padStart(
-                            2,
-                            "0",
-                          )}
-                          :{String(activeSeconds % 60).padStart(2, "0")}
-                        </strong>
-                        <p>{timer.title}</p>
-                        <button className="primary-button" onClick={stopTimer}>
-                          Остановить и сохранить
-                        </button>
-                      </div>
-                    ) : (
-                      <form onSubmit={startTimer} className="stacked-form">
-                        <label>
-                          Задача
-                          <select
-                            value={timerTaskId}
-                            onChange={(event) =>
-                              setTimerTaskId(event.target.value)
-                            }
-                          >
-                            <option value="">Без задачи</option>
-                            {tasks
-                              .filter((task) => task.status !== "done")
-                              .map((task) => (
-                                <option key={task.id} value={task.id}>
-                                  {task.title}
-                                </option>
-                              ))}
-                          </select>
-                        </label>
-                        <label>
-                          Название записи
-                          <input
-                            value={timerTitle}
-                            onChange={(event) =>
-                              setTimerTitle(event.target.value)
-                            }
-                            placeholder="Например, работа над проектом"
-                          />
-                        </label>
-                        <button
-                          className="primary-button"
-                          disabled={!timerTitle.trim() && !timerTaskId}
-                        >
-                          Запустить таймер
-                        </button>
-                      </form>
-                    )}
-                  </section>
-                  <section className="panel">
-                    <div className="section-heading">
-                      <h2>
-                        {editingEntryId
-                          ? "Редактировать запись"
-                          : "Добавить время вручную"}
-                      </h2>
-                    </div>
-                    <form onSubmit={saveEntry} className="stacked-form">
-                      <label>
-                        Дата записи
-                        <input
-                          type="date"
-                          value={entryDate}
-                          onChange={(event) => setEntryDate(event.target.value)}
-                          required
-                        />
-                      </label>
-                      <label>
-                        Название
-                        <input
-                          value={entryTitle}
-                          onChange={(event) =>
-                            setEntryTitle(event.target.value)
-                          }
-                          placeholder="Что было сделано?"
-                          required
-                        />
-                      </label>
-                      <label>
-                        Задача
-                        <select
-                          value={entryTaskId}
-                          onChange={(event) =>
-                            setEntryTaskId(event.target.value)
-                          }
-                        >
-                          <option value="">Без задачи</option>
-                          {tasks.map((task) => (
-                            <option key={task.id} value={task.id}>
-                              {task.title}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Минуты
-                        <input
-                          type="number"
-                          min="1"
-                          step="1"
-                          value={entryMinutes}
-                          onChange={(event) =>
-                            setEntryMinutes(event.target.value)
-                          }
-                          required
-                        />
-                      </label>
-                      <div className="form-actions">
-                        <button className="primary-button">
-                          {editingEntryId
-                            ? "Сохранить изменения"
-                            : "Сохранить время"}
-                        </button>
-                        {editingEntryId && (
-                          <button type="button" onClick={resetEntryForm}>
-                            Отмена
-                          </button>
-                        )}
-                      </div>
-                    </form>
-                  </section>
-                </div>
-                <section className="panel entries-panel">
-                  <div className="section-heading">
-                    <h2>Записи за день</h2>
-                    <strong>{minutesLabel(dayMinutes)}</strong>
-                  </div>
-                  {dayEntries.length === 0 ? (
-                    <p className="empty-state">
-                      За этот день пока нет записей времени.
-                    </p>
-                  ) : (
-                    dayEntries.map((entry) => (
-                      <div className="entry-row" key={entry.id}>
-                        <div>
-                          <strong>{entry.title}</strong>
-                          <small>
-                            {tasks.find((task) => task.id === entry.taskId)
-                              ?.title ?? "Без задачи"}
-                          </small>
-                        </div>
-                        <span>{minutesLabel(entry.minutes)}</span>
-                        <button onClick={() => editEntry(entry)}>
-                          Изменить
-                        </button>
-                        <button
-                          className="danger-text"
-                          onClick={() => deleteEntry(entry)}
-                        >
-                          Удалить
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </section>
-              </div>
-            )}
-
             {view === "calendar" && (
-              <div className="calendar-workspace">
-                <section className="panel calendar-panel">
-                  <div className="section-heading calendar-heading">
-                    <h2>
-                      {formatDate(selectedDate, {
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </h2>
-                    <div>
-                      <button
-                        aria-label="Предыдущий месяц"
-                        onClick={() => moveMonth(-1)}
-                      >
-                        ‹
-                      </button>
-                      <button
-                        aria-label="Следующий месяц"
-                        onClick={() => moveMonth(1)}
-                      >
-                        ›
-                      </button>
-                      <button
-                        className="today-button"
-                        onClick={() => setSelectedDate(dateKey(new Date()))}
-                      >
-                        Сегодня
-                      </button>
-                    </div>
-                  </div>
-                  <div className="calendar-grid">
-                    {weekDays.map((day) => (
-                      <div className="weekday" key={day}>
-                        {day}
-                      </div>
-                    ))}
-                    {calendarDays.map((day) => {
-                      const planned = tasks.filter((task) => task.date === day);
-                      const done = tasks.filter((task) =>
-                        task.completedAt
-                          ? dateKeyFromTimestamp(task.completedAt) === day
-                          : false,
-                      ).length;
-                      const minutes = entries
-                        .filter((entry) => entry.date === day)
-                        .reduce((sum, entry) => sum + entry.minutes, 0);
-                      return (
+              <div className="calendar-page">
+                <div className="calendar-workspace">
+                  <section className="panel calendar-panel">
+                    <div className="section-heading calendar-heading">
+                      <h2>
+                        {formatDate(selectedDate, {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </h2>
+                      <div>
                         <button
-                          key={day}
-                          className={`calendar-day ${parseDate(day).getMonth() !== month ? "outside" : ""} ${day === selectedDate ? "selected" : ""} ${day === currentDay ? "is-today" : ""}`}
-                          onClick={() => setSelectedDate(day)}
+                          aria-label="Предыдущий месяц"
+                          onClick={() => moveMonth(-1)}
                         >
-                          <span>{parseDate(day).getDate()}</span>
-                          <small>
-                            {planned.length > 0 && `${planned.length} план`}
-                          </small>
-                          <small>{done > 0 && `${done} готово`}</small>
-                          <small>{minutes > 0 && minutesLabel(minutes)}</small>
+                          ‹
                         </button>
-                      );
-                    })}
-                  </div>
-                </section>
-                <section className="panel day-details">
-                  <div className="section-heading">
-                    <h2>
-                      {formatDate(selectedDate, {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
+                        <button
+                          aria-label="Следующий месяц"
+                          onClick={() => moveMonth(1)}
+                        >
+                          ›
+                        </button>
+                        <button
+                          className="today-button"
+                          onClick={() => setSelectedDate(dateKey(new Date()))}
+                        >
+                          Сегодня
+                        </button>
+                      </div>
+                    </div>
+                    <div className="calendar-grid">
+                      {weekDays.map((day) => (
+                        <div className="weekday" key={day}>
+                          {day}
+                        </div>
+                      ))}
+                      {calendarDays.map((day) => {
+                        const planned = tasks.filter(
+                          (task) => task.date === day,
+                        );
+                        const done = tasks.filter((task) =>
+                          task.completedAt
+                            ? dateKeyFromTimestamp(task.completedAt) === day
+                            : false,
+                        ).length;
+                        const minutes = entries
+                          .filter((entry) => entry.date === day)
+                          .reduce((sum, entry) => sum + entry.minutes, 0);
+                        return (
+                          <button
+                            key={day}
+                            className={`calendar-day ${parseDate(day).getMonth() !== month ? "outside" : ""} ${day === selectedDate ? "selected" : ""} ${day === currentDay ? "is-today" : ""}`}
+                            onClick={() => setSelectedDate(day)}
+                          >
+                            <span>{parseDate(day).getDate()}</span>
+                            <small>
+                              {planned.length > 0 && `${planned.length} план`}
+                            </small>
+                            <small>{done > 0 && `${done} готово`}</small>
+                            <small>
+                              {minutes > 0 && minutesLabel(minutes)}
+                            </small>
+                          </button>
+                        );
                       })}
-                    </h2>
-                    <button onClick={() => setView("tasks")}>
-                      Открыть задачи →
-                    </button>
-                  </div>
-                  <div className="day-detail-grid">
-                    <div>
-                      <h3>Задачи ({dayTasks.length})</h3>
+                    </div>
+                  </section>
+                  <div className="calendar-day-panels">
+                    {taskEditor}
+                    <section className="panel calendar-tasks-panel">
+                      <div className="section-heading">
+                        <h2>Задачи дня</h2>
+                        <strong>
+                          {completedCount} из {dayTasks.length} готово
+                        </strong>
+                      </div>
                       {dayTasks.length === 0 ? (
-                        <p className="empty-state">Задач нет.</p>
+                        <p className="empty-state">На этот день задач нет.</p>
                       ) : (
                         dayTasks.map((task) => (
-                          <div className="detail-row" key={task.id}>
+                          <div
+                            className="detail-row calendar-task-row"
+                            key={task.id}
+                          >
                             <span className={`status-dot ${task.status}`} />
                             <span>{task.title}</span>
-                            <small>
-                              {task.status === "done"
-                                ? "Готово"
-                                : task.status === "doing"
-                                  ? "В работе"
-                                  : "Сделать"}
-                            </small>
+                            <div className="calendar-task-actions">
+                              <select
+                                aria-label={`Статус задачи ${task.title}`}
+                                value={task.status}
+                                onChange={(event) =>
+                                  setTaskStatus(
+                                    task,
+                                    event.target.value as Task["status"],
+                                  )
+                                }
+                              >
+                                <option value="todo">Сделать</option>
+                                <option value="doing">В работе</option>
+                                <option value="done">Готово</option>
+                              </select>
+                              <button
+                                onClick={() => editTask(task, "calendar")}
+                              >
+                                Изменить
+                              </button>
+                              <button
+                                className="danger-text"
+                                onClick={() => deleteTask(task)}
+                              >
+                                Удалить
+                              </button>
+                            </div>
                           </div>
                         ))
                       )}
@@ -965,20 +823,210 @@ function App() {
                           </div>
                         ))
                       )}
+                    </section>
+                  </div>
+                </div>
+                <section
+                  className="panel calendar-time-panel"
+                  ref={timePanelRef}
+                >
+                  <div className="section-heading">
+                    <h2>Учёт времени</h2>
+                    <strong>{minutesLabel(dayMinutes)}</strong>
+                  </div>
+                  <div className="two-column">
+                    <div className="column-flow">
+                      <section className="calendar-time-section timer-panel">
+                        <div className="section-heading">
+                          <h2>Таймер</h2>
+                          <span className="pill">
+                            {timer
+                              ? "Идёт запись"
+                              : selectedDate === currentDay
+                                ? "Готов к работе"
+                                : "Только сегодня"}
+                          </span>
+                        </div>
+                        {timer ? (
+                          <div className="running-timer">
+                            <strong>
+                              {String(
+                                Math.floor(activeSeconds / 3600),
+                              ).padStart(2, "0")}
+                              :
+                              {String(
+                                Math.floor(activeSeconds / 60) % 60,
+                              ).padStart(2, "0")}
+                              :{String(activeSeconds % 60).padStart(2, "0")}
+                            </strong>
+                            <p>{timer.title}</p>
+                            <button
+                              className="primary-button"
+                              onClick={stopTimer}
+                            >
+                              Остановить и сохранить
+                            </button>
+                          </div>
+                        ) : selectedDate !== currentDay ? (
+                          <p className="empty-state">
+                            Таймер работает для сегодняшнего дня. Для выбранной
+                            даты добавьте время вручную.
+                          </p>
+                        ) : (
+                          <form onSubmit={startTimer} className="stacked-form">
+                            <label>
+                              Задача
+                              <select
+                                value={selectedTimerTask?.id ?? ""}
+                                onChange={(event) =>
+                                  setTimerTaskId(event.target.value)
+                                }
+                              >
+                                <option value="">Без задачи</option>
+                                {timerTasks.map((task) => (
+                                  <option key={task.id} value={task.id}>
+                                    {task.title}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label>
+                              Название записи
+                              <input
+                                value={timerTitle}
+                                onChange={(event) =>
+                                  setTimerTitle(event.target.value)
+                                }
+                                placeholder="Например, работа над проектом"
+                              />
+                            </label>
+                            <button
+                              className="primary-button"
+                              disabled={
+                                !timerTitle.trim() && !selectedTimerTask
+                              }
+                            >
+                              Запустить таймер
+                            </button>
+                          </form>
+                        )}
+                      </section>
+                      <section className="calendar-time-section">
+                        <div className="section-heading">
+                          <h2>
+                            {editingEntryId
+                              ? "Редактировать запись"
+                              : "Добавить время вручную"}
+                          </h2>
+                        </div>
+                        <form onSubmit={saveEntry} className="stacked-form">
+                          {editingEntryId && (
+                            <label>
+                              Дата записи
+                              <input
+                                type="date"
+                                value={entryDate}
+                                onChange={(event) =>
+                                  setEntryDate(event.target.value)
+                                }
+                                required
+                              />
+                            </label>
+                          )}
+                          <label>
+                            Название
+                            <input
+                              value={entryTitle}
+                              onChange={(event) =>
+                                setEntryTitle(event.target.value)
+                              }
+                              placeholder="Что было сделано?"
+                              required
+                            />
+                          </label>
+                          <label>
+                            Задача
+                            <select
+                              value={entryTaskId}
+                              onChange={(event) =>
+                                setEntryTaskId(event.target.value)
+                              }
+                            >
+                              <option value="">Без задачи</option>
+                              {tasks
+                                .filter(
+                                  (task) =>
+                                    task.date === selectedDate ||
+                                    task.id === entryTaskId,
+                                )
+                                .map((task) => (
+                                  <option key={task.id} value={task.id}>
+                                    {task.title}
+                                  </option>
+                                ))}
+                            </select>
+                          </label>
+                          <label>
+                            Минуты
+                            <input
+                              type="number"
+                              min="1"
+                              step="1"
+                              value={entryMinutes}
+                              onChange={(event) =>
+                                setEntryMinutes(event.target.value)
+                              }
+                              required
+                            />
+                          </label>
+                          <div className="form-actions">
+                            <button className="primary-button">
+                              {editingEntryId
+                                ? "Сохранить изменения"
+                                : "Сохранить время"}
+                            </button>
+                            {editingEntryId && (
+                              <button type="button" onClick={resetEntryForm}>
+                                Отмена
+                              </button>
+                            )}
+                          </div>
+                        </form>
+                      </section>
                     </div>
-                    <div>
-                      <h3>Время ({minutesLabel(dayMinutes)})</h3>
+                    <section className="calendar-time-section entries-panel">
+                      <div className="section-heading">
+                        <h2>Записи за день</h2>
+                        <strong>{minutesLabel(dayMinutes)}</strong>
+                      </div>
                       {dayEntries.length === 0 ? (
-                        <p className="empty-state">Записей нет.</p>
+                        <p className="empty-state">
+                          За этот день пока нет записей времени.
+                        </p>
                       ) : (
                         dayEntries.map((entry) => (
-                          <div className="detail-row" key={entry.id}>
-                            <span>{entry.title}</span>
-                            <small>{minutesLabel(entry.minutes)}</small>
+                          <div className="entry-row" key={entry.id}>
+                            <div>
+                              <strong>{entry.title}</strong>
+                              <small>
+                                {tasks.find((task) => task.id === entry.taskId)
+                                  ?.title ?? "Без задачи"}
+                              </small>
+                            </div>
+                            <span>{minutesLabel(entry.minutes)}</span>
+                            <button onClick={() => editEntry(entry)}>
+                              Изменить
+                            </button>
+                            <button
+                              className="danger-text"
+                              onClick={() => deleteEntry(entry)}
+                            >
+                              Удалить
+                            </button>
                           </div>
                         ))
                       )}
-                    </div>
+                    </section>
                   </div>
                 </section>
               </div>
