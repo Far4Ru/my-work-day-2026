@@ -101,10 +101,6 @@ button:hover:not(:disabled) {
   font-weight: 900;
   letter-spacing: -0.05em;
 }
-.brand em {
-  color: #da6853;
-  font-style: normal;
-}
 .brand small {
   display: block;
   margin-top: 3px;

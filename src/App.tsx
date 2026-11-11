@@ -387,7 +387,7 @@ function App() {
         <div className="brand">
           <span className="brand-mark">✓</span>
           <span>
-            Todo <em>/</em> Did<small>Личный рабочий день</small>
+            My Work Day<small>Личный рабочий день</small>
           </span>
         </div>
         <nav aria-label="Основная навигация" className="navigation">
