@@ -967,6 +967,10 @@ textarea {
     min-width: 0;
   }
 
+  .task-workspace-left {
+    min-width: 0;
+  }
+
   .stats-row {
     margin-bottom: 12px;
   }
@@ -1128,5 +1132,44 @@ textarea {
   .main-content {
     padding: clamp(42px, 5vh, 68px) clamp(58px, 4vw, 110px)
       clamp(50px, 6vh, 72px);
+  }
+}
+
+@media (min-width: 2100px) and (min-aspect-ratio: 2 / 1) {
+  .task-workspace {
+    grid-template-columns: minmax(145px, 0.2fr) minmax(280px, 0.38fr) minmax(
+        0,
+        1fr
+      );
+    grid-template-areas:
+      "stats editor board"
+      "filter editor board";
+  }
+
+  .task-workspace-left {
+    display: contents;
+  }
+
+  .task-workspace-controls {
+    grid-area: stats;
+  }
+
+  .task-workspace-controls .stats-row {
+    grid-template-columns: minmax(0, 1fr);
+    margin-bottom: 0;
+  }
+
+  .task-editor-panel {
+    grid-area: editor;
+    margin-bottom: 0;
+  }
+
+  .project-filter {
+    grid-area: filter;
+    margin-bottom: 0;
+  }
+
+  .task-workspace .board {
+    grid-area: board;
   }
 }

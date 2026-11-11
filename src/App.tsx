@@ -481,22 +481,24 @@ function App() {
 
             {view === "tasks" && (
               <div className="task-workspace">
-                <div className="task-workspace-controls">
-                  <div className="stats-row">
-                    <div className="stat">
-                      <span>Задач на день</span>
-                      <strong>{dayTasks.length}</strong>
-                    </div>
-                    <div className="stat">
-                      <span>Выполнено</span>
-                      <strong>{completedCount}</strong>
-                    </div>
-                    <div className="stat">
-                      <span>Учтено времени</span>
-                      <strong>{minutesLabel(dayMinutes)}</strong>
+                <div className="task-workspace-left">
+                  <div className="task-workspace-controls">
+                    <div className="stats-row">
+                      <div className="stat">
+                        <span>Задач на день</span>
+                        <strong>{dayTasks.length}</strong>
+                      </div>
+                      <div className="stat">
+                        <span>Выполнено</span>
+                        <strong>{completedCount}</strong>
+                      </div>
+                      <div className="stat">
+                        <span>Учтено времени</span>
+                        <strong>{minutesLabel(dayMinutes)}</strong>
+                      </div>
                     </div>
                   </div>
-                  <section className="panel">
+                  <section className="panel task-editor-panel">
                     <div className="section-heading">
                       <h2>
                         {editingTaskId
