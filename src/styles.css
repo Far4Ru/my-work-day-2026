@@ -110,17 +110,26 @@ button:hover:not(:disabled) {
   letter-spacing: 0.01em;
 }
 .brand-mark {
-  display: grid;
   flex: none;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  color: #f8f8f4;
-  background: #394c46;
-  border: 2px solid #263730;
-  border-radius: 50%;
-  box-shadow: 2px 3px 0 #bcc6c0;
-  font-size: 22px;
+  width: 38px;
+  height: 38px;
+  filter: drop-shadow(2px 3px 0 #bcc6c0);
+}
+.icon {
+  display: inline-block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+}
+.icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.icon-label .icon {
+  width: 14px;
+  height: 14px;
 }
 .navigation {
   display: grid;
@@ -140,10 +149,9 @@ button:hover:not(:disabled) {
   font-size: 13px;
   font-weight: 800;
 }
-.nav-button span {
+.nav-button .icon {
   width: 20px;
-  font-size: 18px;
-  text-align: center;
+  height: 20px;
 }
 .nav-button.active,
 .nav-button:hover {
@@ -261,6 +269,8 @@ h3 {
   text-transform: uppercase;
 }
 .date-toolbar button {
+  display: inline-grid;
+  place-items: center;
   width: 36px;
   padding: 5px;
   font-size: 22px;
@@ -450,6 +460,8 @@ textarea {
   gap: 8px;
 }
 .calendar-heading button {
+  display: inline-grid;
+  place-items: center;
   min-width: 35px;
   padding: 6px;
   font-size: 20px;

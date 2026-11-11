@@ -17,6 +17,37 @@ import type { ActiveTimer, ReportPeriod, Task, TimeEntry } from "./model";
 import { entriesFromTimer } from "./timer";
 
 type View = "tasks" | "calendar" | "statistics" | "reports";
+type IconName =
+  | "tasks"
+  | "calendar"
+  | "statistics"
+  | "reports"
+  | "chevron-left"
+  | "chevron-right"
+  | "plus"
+  | "arrow-left"
+  | "arrow-right"
+  | "check"
+  | "restore"
+  | "edit"
+  | "delete"
+  | "save"
+  | "close"
+  | "clock"
+  | "stop"
+  | "date";
+
+function Icon({ name }: { name: IconName }) {
+  return (
+    <img
+      className="icon"
+      src={`${import.meta.env.BASE_URL}icons/${name}.svg`}
+      alt=""
+      aria-hidden="true"
+    />
+  );
+}
+
 type TaskRowDraft = Pick<
   Task,
   "id" | "title" | "project" | "date" | "dueTime" | "note"
@@ -515,7 +546,7 @@ function App() {
           aria-pressed={showQuickTimeFields}
           onClick={() => setShowQuickTimeFields((visible) => !visible)}
         >
-          🕒
+          <Icon name="clock" />
         </button>
       )}
       {view === "calendar" && showQuickTimeFields && (
@@ -539,7 +570,7 @@ function App() {
         </div>
       )}
       <button type="submit" title="Добавить" aria-label="Добавить задачу">
-        💾
+        <Icon name="save" />
       </button>
       <button
         type="button"
@@ -547,7 +578,7 @@ function App() {
         aria-label="Отменить добавление задачи"
         onClick={() => setIsAddingDayTask(false)}
       >
-        ✕
+        <Icon name="close" />
       </button>
     </form>
   );
@@ -632,7 +663,7 @@ function App() {
             })
           }
         >
-          🕒
+          <Icon name="clock" />
         </button>
       )}
       {view === "calendar" && taskRowDraft.showTimeFields && (
@@ -666,7 +697,7 @@ function App() {
         </div>
       )}
       <button type="submit" title="Сохранить" aria-label="Сохранить задачу">
-        💾
+        <Icon name="save" />
       </button>
       <button
         type="button"
@@ -674,7 +705,7 @@ function App() {
         aria-label="Отменить редактирование задачи"
         onClick={() => setTaskRowDraft(null)}
       >
-        ✕
+        <Icon name="close" />
       </button>
     </form>
   );
@@ -704,7 +735,12 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <span className="brand-mark">✓</span>
+          <img
+            className="brand-mark"
+            src={`${import.meta.env.BASE_URL}icons/logo.svg`}
+            alt=""
+            aria-hidden="true"
+          />
           <span>
             My Work Day<small>Личный рабочий день</small>
           </span>
@@ -712,18 +748,18 @@ function App() {
         <nav aria-label="Основная навигация" className="navigation">
           {(
             [
-              ["tasks", "Задачи", "☑"],
-              ["calendar", "Календарь", "▦"],
-              ["statistics", "Статистика", "◫"],
-              ["reports", "Отчёты", "▤"],
+              ["tasks", "Задачи"],
+              ["calendar", "Календарь"],
+              ["statistics", "Статистика"],
+              ["reports", "Отчёты"],
             ] as const
-          ).map(([key, label, icon]) => (
+          ).map(([key, label]) => (
             <button
               key={key}
               className={view === key ? "nav-button active" : "nav-button"}
               onClick={() => setView(key)}
             >
-              <span aria-hidden="true">{icon}</span>
+              <Icon name={key} />
               {label}
             </button>
           ))}
@@ -771,7 +807,7 @@ function App() {
                 aria-label="Предыдущий период"
                 onClick={() => moveSelectedDate(-1)}
               >
-                ‹
+                <Icon name="chevron-left" />
               </button>
               <label>
                 {view === "tasks" || view === "calendar"
@@ -838,7 +874,7 @@ function App() {
                 aria-label="Следующий период"
                 onClick={() => moveSelectedDate(1)}
               >
-                ›
+                <Icon name="chevron-right" />
               </button>
               <button
                 className="today-button"
@@ -890,7 +926,7 @@ function App() {
                               setIsAddingDayTask((isAdding) => !isAdding);
                             }}
                           >
-                            +
+                            <Icon name="plus" />
                           </button>
                         )}
                         <span className="count">
@@ -938,11 +974,15 @@ function App() {
                                     )
                                   }
                                 >
-                                  {task.status === "done"
-                                    ? "↺"
-                                    : task.status === "todo"
-                                      ? "→"
-                                      : "←"}
+                                  <Icon
+                                    name={
+                                      task.status === "done"
+                                        ? "restore"
+                                        : task.status === "todo"
+                                          ? "arrow-right"
+                                          : "arrow-left"
+                                    }
+                                  />
                                 </button>
                                 {task.status !== "done" && (
                                   <button
@@ -951,7 +991,7 @@ function App() {
                                     aria-label={`Отметить задачу ${task.title} выполненной`}
                                     onClick={() => setTaskStatus(task, "done")}
                                   >
-                                    ✓
+                                    <Icon name="check" />
                                   </button>
                                 )}
                                 <span className="hub-row-title">
@@ -968,7 +1008,9 @@ function App() {
                                   </span>
                                 )}
                                 {task.dueTime && (
-                                  <small>🕑 {task.dueTime}</small>
+                                  <small className="icon-label">
+                                    <Icon name="clock" /> {task.dueTime}
+                                  </small>
                                 )}
                                 {task.estimateMinutes > 0 && (
                                   <small>
@@ -981,7 +1023,7 @@ function App() {
                                   aria-label={`Редактировать задачу ${task.title}`}
                                   onClick={() => editTaskRow(task)}
                                 >
-                                  ✎
+                                  <Icon name="edit" />
                                 </button>
                                 <button
                                   className="mini-action danger-text"
@@ -989,7 +1031,7 @@ function App() {
                                   aria-label={`Удалить задачу ${task.title}`}
                                   onClick={() => deleteTask(task)}
                                 >
-                                  ✕
+                                  <Icon name="delete" />
                                 </button>
                               </div>
                             ),
@@ -1023,13 +1065,13 @@ function App() {
                           aria-label="Предыдущий месяц"
                           onClick={() => moveMonth(-1)}
                         >
-                          ‹
+                          <Icon name="chevron-left" />
                         </button>
                         <button
                           aria-label="Следующий месяц"
                           onClick={() => moveMonth(1)}
                         >
-                          ›
+                          <Icon name="chevron-right" />
                         </button>
                       </div>
                     </div>
@@ -1082,7 +1124,7 @@ function App() {
                           setIsAddingDayTask((isAdding) => !isAdding);
                         }}
                       >
-                        +
+                        <Icon name="plus" />
                       </button>
                       <strong>
                         {calendarCompletedCount} из {calendarDayTasks.length}{" "}
@@ -1120,23 +1162,33 @@ function App() {
                                 )
                               }
                             >
-                              {task.status === "done" ? "↺" : "✓"}
+                              <Icon
+                                name={
+                                  task.status === "done" ? "restore" : "check"
+                                }
+                              />
                             </button>
                             <span className="hub-row-title">{task.title}</span>
                             {task.project && (
                               <span className="task-tag">{task.project}</span>
                             )}
                             {task.date !== selectedDate && (
-                              <span className="task-tag">📅 {task.date}</span>
+                              <span className="task-tag icon-label">
+                                <Icon name="date" /> {task.date}
+                              </span>
                             )}
-                            {task.dueTime && <small>🕑 {task.dueTime}</small>}
+                            {task.dueTime && (
+                              <small className="icon-label">
+                                <Icon name="clock" /> {task.dueTime}
+                              </small>
+                            )}
                             <button
                               className="mini-action"
                               title="Редактировать"
                               aria-label={`Редактировать задачу ${task.title}`}
                               onClick={() => editTaskRow(task)}
                             >
-                              ✎
+                              <Icon name="edit" />
                             </button>
                             <button
                               className="mini-action danger-text"
@@ -1144,7 +1196,7 @@ function App() {
                               aria-label={`Удалить задачу ${task.title}`}
                               onClick={() => deleteTask(task)}
                             >
-                              ✕
+                              <Icon name="delete" />
                             </button>
                           </div>
                         ),
@@ -1181,7 +1233,7 @@ function App() {
                             aria-label="Остановить таймер и сохранить время"
                             onClick={stopTimer}
                           >
-                            ■
+                            <Icon name="stop" />
                           </button>
                         </div>
                       )}
@@ -1245,7 +1297,7 @@ function App() {
                                 title="Сохранить"
                                 aria-label="Сохранить запись времени"
                               >
-                                💾
+                                <Icon name="save" />
                               </button>
                               <button
                                 type="button"
@@ -1253,7 +1305,7 @@ function App() {
                                 aria-label="Отменить редактирование времени"
                                 onClick={() => setEditingEntryId(null)}
                               >
-                                ✕
+                                <Icon name="close" />
                               </button>
                             </form>
                           ) : (
@@ -1276,7 +1328,7 @@ function App() {
                                 aria-label={`Редактировать запись ${entry.title}`}
                                 onClick={() => editEntry(entry)}
                               >
-                                ✎
+                                <Icon name="edit" />
                               </button>
                               <button
                                 className="mini-action danger-text"
@@ -1284,7 +1336,7 @@ function App() {
                                 aria-label={`Удалить запись ${entry.title}`}
                                 onClick={() => deleteEntry(entry)}
                               >
-                                ✕
+                                <Icon name="delete" />
                               </button>
                             </div>
                           ),
