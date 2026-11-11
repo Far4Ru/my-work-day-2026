@@ -200,32 +200,62 @@ button:hover:not(:disabled) {
   margin: 0;
   padding: 0 36px 0 0;
   border: 0;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
 }
 .header-date-slot > .date-toolbar {
   align-self: center;
   margin: 0;
   visibility: hidden;
   opacity: 0;
+  transform: translateY(6px);
   pointer-events: none;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease,
+    visibility 0s linear 220ms;
 }
 .header-date-slot:focus-within > .page-header {
   opacity: 0;
+  transform: translateY(-6px);
   pointer-events: none;
 }
 .header-date-slot:focus-within > .date-toolbar {
   visibility: visible;
   opacity: 1;
+  transform: translateY(0);
   pointer-events: auto;
+  transition:
+    opacity 220ms ease 50ms,
+    transform 220ms ease 50ms,
+    visibility 0s;
 }
 @media (hover: hover) {
   .header-date-slot:hover > .page-header {
     opacity: 0;
+    transform: translateY(-6px);
     pointer-events: none;
   }
   .header-date-slot:hover > .date-toolbar {
     visibility: visible;
     opacity: 1;
+    transform: translateY(0);
     pointer-events: auto;
+    transition:
+      opacity 220ms ease 50ms,
+      transform 220ms ease 50ms,
+      visibility 0s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .header-date-slot > .page-header,
+  .header-date-slot > .date-toolbar,
+  .header-date-slot:focus-within > .date-toolbar,
+  .header-date-slot:hover > .date-toolbar {
+    transition: none;
   }
 }
 .page-header > div {
@@ -920,10 +950,12 @@ textarea {
   .header-date-slot > .date-toolbar {
     visibility: visible;
     opacity: 1;
+    transform: translateY(0);
     pointer-events: auto;
   }
   .header-date-slot:focus-within > .page-header {
     opacity: 1;
+    transform: translateY(0);
     pointer-events: auto;
   }
 }
