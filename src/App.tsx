@@ -1761,7 +1761,7 @@ function App() {
         setTransition(null);
         navigating.current = false;
       },
-      reducedMotion ? 0 : 720,
+      reducedMotion ? 0 : 920,
     );
 
     return () => window.clearTimeout(timeout);

@@ -73,7 +73,7 @@ button:hover:not(:disabled) {
 .board-slide {
   position: absolute;
   inset: 0;
-  transition: transform 700ms cubic-bezier(0.22, 0.8, 0.22, 1);
+  transition: transform 900ms cubic-bezier(0.45, 0, 0.25, 1);
 }
 .board-slide[inert] {
   pointer-events: none;
