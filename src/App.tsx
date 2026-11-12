@@ -1883,6 +1883,14 @@ function App() {
   const [gridPhase, setGridPhase] = useState<
     "closed" | "opening" | "open" | "closing"
   >("closed");
+
+  useLayoutEffect(() => {
+    const root = document.getElementById("root");
+    root?.classList.toggle("board-grid-background-visible", gridPhase === "open");
+
+    return () => root?.classList.remove("board-grid-background-visible");
+  }, [gridPhase]);
+
   const [boardError, setBoardError] = useState("");
   const [shiftPressed, setShiftPressed] = useState(false);
   const navigating = useRef(false);
