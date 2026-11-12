@@ -88,11 +88,24 @@ button:hover:not(:disabled) {
   position: fixed;
   z-index: 5;
   top: 50%;
+  width: 96px;
+  height: 84px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+.board-edge-button:focus-visible {
+  outline: none;
+}
+.board-edge-button-face {
+  position: absolute;
+  top: 50%;
   display: grid;
   place-items: center;
   width: 72px;
   height: 72px;
-  padding: 0;
   color: #263b31;
   background: #f9faf7;
   border: 2px solid #252a2d;
@@ -104,12 +117,19 @@ button:hover:not(:disabled) {
     opacity 600ms ease,
     box-shadow 380ms ease;
 }
+.board-edge-button:focus-visible .board-edge-button-face {
+  outline: 2px solid #252a2d;
+  outline-offset: 3px;
+}
 .board-edge-button .icon {
   width: 26px;
   height: 26px;
   transition: transform 380ms ease;
 }
 .board-edge-button--left {
+  left: 0;
+}
+.board-edge-button--left .board-edge-button-face {
   left: 0;
   transform: translate(-50%, -50%);
 }
@@ -118,18 +138,21 @@ button:hover:not(:disabled) {
 }
 .board-edge-button--right {
   right: 0;
+}
+.board-edge-button--right .board-edge-button-face {
+  right: 0;
   transform: translate(50%, -50%);
 }
 .board-edge-button--right .icon {
   transform: translateX(-14px);
 }
-.board-edge-button--left:hover,
-.board-edge-button--left:focus-visible {
+.board-edge-button--left:hover .board-edge-button-face,
+.board-edge-button--left:focus-visible .board-edge-button-face {
   transform: translate(25%, -50%) scale(1.06);
   opacity: 1;
 }
-.board-edge-button--right:hover,
-.board-edge-button--right:focus-visible {
+.board-edge-button--right:hover .board-edge-button-face,
+.board-edge-button--right:focus-visible .board-edge-button-face {
   transform: translate(-25%, -50%) scale(1.06);
   opacity: 1;
 }
@@ -139,8 +162,11 @@ button:hover:not(:disabled) {
 .board-edge-button--right:focus-visible .icon {
   transform: translateX(0);
 }
-.board-edge-button:disabled {
+.board-edge-button:disabled .board-edge-button-face {
   opacity: 0.12;
+}
+.board-edge-button:disabled {
+  opacity: 1;
 }
 .board-startup,
 .board-error {
@@ -163,7 +189,7 @@ button:hover:not(:disabled) {
 }
 @media (prefers-reduced-motion: reduce) {
   .board-slide,
-  .board-edge-button,
+  .board-edge-button-face,
   .board-edge-button .icon {
     transition: none;
   }
@@ -1064,6 +1090,10 @@ textarea {
     padding: 0;
   }
   .board-edge-button {
+    width: 74px;
+    height: 64px;
+  }
+  .board-edge-button-face {
     width: 54px;
     height: 54px;
     opacity: 0.4;

@@ -1989,15 +1989,17 @@ function App() {
             onPointerDown={(event) => setShiftPressed(event.shiftKey)}
             onClick={(event) => useEdge(direction, event.shiftKey)}
           >
-            <Icon
-              name={
-                action.kind === "create"
-                  ? "plus"
-                  : isLeft
-                    ? "chevron-left"
-                    : "chevron-right"
-              }
-            />
+            <span className="board-edge-button-face" aria-hidden="true">
+              <Icon
+                name={
+                  action.kind === "create"
+                    ? "plus"
+                    : isLeft
+                      ? "chevron-left"
+                      : "chevron-right"
+                }
+              />
+            </span>
           </button>
         );
       })}
