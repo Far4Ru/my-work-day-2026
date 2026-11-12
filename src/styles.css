@@ -187,8 +187,8 @@ button:hover:not(:disabled) {
 }
 .board-grid-add-toggle input::after {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 35%;
+  left: 70%;
   width: 27px;
   height: 24px;
   background: currentColor;
