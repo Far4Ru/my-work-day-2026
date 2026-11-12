@@ -1161,7 +1161,11 @@ function BoardContent({
                                 key={task.id}
                               >
                                 <button
-                                  className="mini-action"
+                                  className={
+                                    task.status === "done"
+                                      ? "mini-action"
+                                      : "mini-action panel-arrow-action"
+                                  }
                                   aria-label={
                                     task.status === "done"
                                       ? `Вернуть задачу ${task.title} в работу`
@@ -1392,7 +1396,7 @@ function BoardContent({
                               </small>
                             )}
                             <button
-                              className="mini-action"
+                              className="mini-action panel-arrow-action"
                               title="Перенести в задачи без даты"
                               aria-label={`Убрать задачу ${task.title} из дня`}
                               onClick={() => moveTaskToAnyDay(task)}
@@ -1590,7 +1594,7 @@ function BoardContent({
                             key={task.id}
                           >
                             <button
-                              className="mini-action"
+                              className="mini-action panel-arrow-action"
                               title="Перенести на выбранный день"
                               aria-label={`Перенести задачу ${task.title} на ${formatDate(selectedDate)}`}
                               onClick={() => moveTaskToSelectedDay(task)}

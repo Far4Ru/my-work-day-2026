@@ -1061,6 +1061,38 @@ textarea {
   font-size: 20px;
   line-height: 18px;
 }
+.board-column .board-add-button,
+.calendar-page .board-add-button,
+.calendar-heading button,
+.panel-arrow-action {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+.board-column:is(:hover, :focus-within) .board-add-button,
+.calendar-page .panel:is(:hover, :focus-within) .board-add-button,
+.calendar-panel:is(:hover, :focus-within) .calendar-heading button,
+.hub-day-row:is(:hover, :focus-within) .panel-arrow-action {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (hover: none) {
+  .board-column .board-add-button,
+  .calendar-page .board-add-button,
+  .calendar-heading button,
+  .panel-arrow-action {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .board-column .board-add-button,
+  .calendar-page .board-add-button,
+  .calendar-heading button,
+  .panel-arrow-action {
+    transition: none;
+  }
+}
 .date-toolbar .today-button,
 .calendar-heading .today-button {
   flex: none;
