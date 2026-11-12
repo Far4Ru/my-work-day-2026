@@ -449,6 +449,7 @@ button:hover:not(:disabled) {
 .brand-slot {
   --brand-fade-duration: 480ms;
   display: grid;
+  margin-bottom: 30px;
 }
 .brand-slot > .brand,
 .brand-slot > .brand-grid-button {
@@ -458,7 +459,7 @@ button:hover:not(:disabled) {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 6px 30px;
+  padding: 0 6px;
   font-size: 20px;
   font-weight: 900;
   letter-spacing: -0.05em;
@@ -568,6 +569,9 @@ button:hover:not(:disabled) {
 }
 .board-identity-row input[readonly] {
   cursor: default;
+}
+.board-identity-row input:focus {
+  box-shadow: none;
 }
 .board-identity-row button {
   display: grid;
@@ -1375,8 +1379,10 @@ textarea {
     border-right: 0;
     border-bottom: 2px solid #b7bfba;
   }
+  .brand-slot {
+    margin-bottom: 11px;
+  }
   .brand {
-    padding-bottom: 11px;
     font-size: 18px;
   }
   .brand-grid-button {
@@ -1572,11 +1578,8 @@ textarea {
   .brand-grid-button {
     font-size: 18px;
   }
-  .brand {
-    padding-bottom: 64px;
-  }
-  .board-identity {
-    margin-top: -20px;
+  .brand-slot {
+    margin-bottom: 44px;
   }
 
   .nav-button {
