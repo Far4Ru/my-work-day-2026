@@ -148,6 +148,36 @@ button:hover:not(:disabled) {
   content: attr(data-text);
   transform: translate(10px, -5px);
 }
+.board-grid-add-toggle {
+  display: inline-flex;
+  position: absolute;
+  z-index: 3;
+  top: clamp(24px, 4vw, 48px);
+  right: calc(48px + 50% - 50vw);
+  align-items: center;
+  gap: 9px;
+  color: #17211d;
+  font-family: "Segoe Print", "Comic Sans MS", cursive;
+  font-size: 17px;
+  font-weight: 700;
+  opacity: 0.78;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity 180ms ease;
+}
+.board-grid-add-toggle:hover,
+.board-grid-add-toggle:focus-within {
+  opacity: 1;
+}
+.board-grid-add-toggle input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  accent-color: #263b31;
+  cursor: pointer;
+}
 .board-grid-list {
   display: grid;
   position: absolute;
@@ -381,6 +411,7 @@ button:hover:not(:disabled) {
 @media (prefers-reduced-motion: reduce) {
   .board-slide,
   .board-grid-screen,
+  .board-grid-add-toggle,
   .board-grid-card,
   .board-grid-back,
   .board-grid-back-label::after,
@@ -1063,24 +1094,21 @@ textarea {
 }
 .board-column .board-add-button,
 .calendar-page .board-add-button,
-.calendar-heading button,
-.panel-arrow-action {
+.calendar-heading button {
   opacity: 0;
   pointer-events: none;
   transition: opacity 180ms ease;
 }
 .board-column:is(:hover, :focus-within) .board-add-button,
 .calendar-page .panel:is(:hover, :focus-within) .board-add-button,
-.calendar-panel:is(:hover, :focus-within) .calendar-heading button,
-.hub-day-row:is(:hover, :focus-within) .panel-arrow-action {
+.calendar-panel:is(:hover, :focus-within) .calendar-heading button {
   opacity: 1;
   pointer-events: auto;
 }
 @media (hover: none) {
   .board-column .board-add-button,
   .calendar-page .board-add-button,
-  .calendar-heading button,
-  .panel-arrow-action {
+  .calendar-heading button {
     opacity: 1;
     pointer-events: auto;
   }
@@ -1088,8 +1116,7 @@ textarea {
 @media (prefers-reduced-motion: reduce) {
   .board-column .board-add-button,
   .calendar-page .board-add-button,
-  .calendar-heading button,
-  .panel-arrow-action {
+  .calendar-heading button {
     transition: none;
   }
 }
@@ -1433,6 +1460,10 @@ textarea {
     top: 22px;
     right: 20px;
     left: 20px;
+  }
+  .board-grid-add-toggle {
+    top: 78px;
+    right: 20px;
   }
   .board-grid-card {
     aspect-ratio: 8 / 5;

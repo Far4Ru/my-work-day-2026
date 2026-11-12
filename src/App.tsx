@@ -26,6 +26,7 @@ import { scheduleTask, unscheduleTask } from "./taskSchedule";
 import { entriesFromTimer } from "./timer";
 
 type View = "tasks" | "calendar" | "statistics" | "reports";
+const BOARD_CREATION_SETTING_KEY = "todo-did:allow-board-creation";
 type IconName =
   | "tasks"
   | "calendar"
@@ -1161,11 +1162,7 @@ function BoardContent({
                                 key={task.id}
                               >
                                 <button
-                                  className={
-                                    task.status === "done"
-                                      ? "mini-action"
-                                      : "mini-action panel-arrow-action"
-                                  }
+                                  className="mini-action"
                                   aria-label={
                                     task.status === "done"
                                       ? `Вернуть задачу ${task.title} в работу`
@@ -1396,7 +1393,7 @@ function BoardContent({
                               </small>
                             )}
                             <button
-                              className="mini-action panel-arrow-action"
+                              className="mini-action"
                               title="Перенести в задачи без даты"
                               aria-label={`Убрать задачу ${task.title} из дня`}
                               onClick={() => moveTaskToAnyDay(task)}
@@ -1594,7 +1591,7 @@ function BoardContent({
                             key={task.id}
                           >
                             <button
-                              className="mini-action panel-arrow-action"
+                              className="mini-action"
                               title="Перенести на выбранный день"
                               aria-label={`Перенести задачу ${task.title} на ${formatDate(selectedDate)}`}
                               onClick={() => moveTaskToSelectedDay(task)}
@@ -1696,6 +1693,8 @@ function BoardContent({
 interface BoardGridProps {
   boards: Board[];
   activeBoardId: string;
+  allowBoardCreation: boolean;
+  onAllowBoardCreationChange: (allow: boolean) => void;
   onClose: () => void;
   onSelect: (id: string) => void;
   onMove: (sourceId: string, targetId: string) => void;
@@ -1705,6 +1704,8 @@ interface BoardGridProps {
 function BoardGrid({
   boards,
   activeBoardId,
+  allowBoardCreation,
+  onAllowBoardCreationChange,
   onClose,
   onSelect,
   onMove,
@@ -1799,6 +1800,14 @@ function BoardGrid({
       <h2 className="board-grid-title" data-text="Все доски" aria-label="Все доски">
         Все доски
       </h2>
+      <label className="board-grid-add-toggle">
+        <input
+          type="checkbox"
+          checked={allowBoardCreation}
+          onChange={(event) => onAllowBoardCreationChange(event.target.checked)}
+        />
+        <span>Добавлять доски</span>
+      </label>
       <div
         ref={listElement}
         className="board-grid-list"
@@ -1893,6 +1902,13 @@ interface BoardTransition {
 function App() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
+  const [allowBoardCreation, setAllowBoardCreation] = useState(() => {
+    try {
+      return window.localStorage.getItem(BOARD_CREATION_SETTING_KEY) !== "false";
+    } catch {
+      return true;
+    }
+  });
   const [transition, setTransition] = useState<BoardTransition | null>(null);
   const [gridPhase, setGridPhase] = useState<
     "closed" | "opening" | "open" | "closing"
@@ -1904,6 +1920,17 @@ function App() {
 
     return () => root?.classList.remove("board-grid-background-visible");
   }, [gridPhase]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        BOARD_CREATION_SETTING_KEY,
+        String(allowBoardCreation),
+      );
+    } catch {
+      // The toggle still works for this session when browser storage is blocked.
+    }
+  }, [allowBoardCreation]);
 
   const [boardError, setBoardError] = useState("");
   const [shiftPressed, setShiftPressed] = useState(false);
@@ -2131,7 +2158,7 @@ function App() {
   }
 
   async function createBoard(direction: CarouselDirection): Promise<void> {
-    if (navigating.current || !activeBoardId) return;
+    if (!allowBoardCreation || navigating.current || !activeBoardId) return;
 
     navigating.current = true;
     const currentIndex = boards.findIndex(
@@ -2174,9 +2201,14 @@ function App() {
 
   function useEdge(direction: CarouselDirection, shiftKey: boolean) {
     if (!activeBoardId) return;
-    const action = edgeAction(boards, activeBoardId, direction, shiftKey);
+    const action = edgeAction(
+      boards,
+      activeBoardId,
+      direction,
+      allowBoardCreation && shiftKey,
+    );
     if (action.kind === "create") {
-      void createBoard(direction);
+      if (allowBoardCreation) void createBoard(direction);
       return;
     }
 
@@ -2293,6 +2325,8 @@ function App() {
             <BoardGrid
               boards={boards}
               activeBoardId={activeBoard.id}
+              allowBoardCreation={allowBoardCreation}
+              onAllowBoardCreationChange={setAllowBoardCreation}
               onClose={closeBoardGrid}
               onSelect={(id) => void selectBoardFromGrid(id)}
               onMove={(sourceId, targetId) => {
@@ -2310,8 +2344,9 @@ function App() {
           boards,
           activeBoard.id,
           direction,
-          shiftPressed,
+          allowBoardCreation && shiftPressed,
         );
+        if (action.kind === "create" && !allowBoardCreation) return null;
         const label =
           action.kind === "create"
             ? isLeft
@@ -2326,7 +2361,7 @@ function App() {
             type="button"
             className={`board-edge-button ${isLeft ? "board-edge-button--left" : "board-edge-button--right"}`}
             aria-label={label}
-            title={`${label} — Shift меняет действие`}
+            title={allowBoardCreation ? `${label} — Shift меняет действие` : label}
             disabled={transition !== null}
             onPointerDown={(event) => setShiftPressed(event.shiftKey)}
             onClick={(event) => useEdge(direction, event.shiftKey)}
