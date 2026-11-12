@@ -1711,18 +1711,7 @@ function BoardGrid({
   }
 
   return (
-    <div className="app-shell board-grid-shell">
-      <header className="board-grid-header">
-        <div>
-          <span className="board-grid-eyebrow">My Work Day</span>
-          <h1>Все доски</h1>
-          <p>Перетащите панели, чтобы изменить порядок досок.</p>
-        </div>
-        <button type="button" onClick={onClose}>
-          <Icon name="close" />
-          Вернуться к доске
-        </button>
-      </header>
+    <>
       <div className="board-grid-list" aria-label="Порядок досок">
         {boards.map((board, index) => (
           <button
@@ -1792,7 +1781,11 @@ function BoardGrid({
           </button>
         ))}
       </div>
-    </div>
+      <button className="board-grid-back" type="button" onClick={onClose}>
+        <Icon name="arrow-left" />
+        Вернуться к доске
+      </button>
+    </>
   );
 }
 
