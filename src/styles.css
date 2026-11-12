@@ -249,7 +249,7 @@ button:hover:not(:disabled) {
   filter: drop-shadow(2px 3px 0 #bcc6c0);
 }
 .board-identity {
-  margin: -14px 6px 24px;
+  margin: 0 0 8px;
 }
 .board-identity-row {
   display: flex;
@@ -1177,7 +1177,7 @@ textarea {
     font-size: 18px;
   }
   .board-identity {
-    margin-top: -42px;
+    margin-top: -20px;
   }
 
   .nav-button {
