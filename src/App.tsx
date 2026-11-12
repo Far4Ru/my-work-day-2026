@@ -1785,6 +1785,7 @@ function BoardGrid({
 
   return (
     <>
+      <h2 className="board-grid-title">Все доски</h2>
       <div
         ref={listElement}
         className="board-grid-list"
