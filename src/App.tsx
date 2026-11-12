@@ -2277,6 +2277,7 @@ function App() {
         boards.find((board) => board.id === transition.toId),
       ].filter((board): board is Board => board !== undefined)
     : [activeBoard];
+  const edgeBoardId = transition?.toId ?? activeBoard.id;
   const gridMotionClass = gridPhase === "closed"
     ? ""
     : " board-slide--grid-transition";
@@ -2342,7 +2343,7 @@ function App() {
         const isLeft = direction === -1;
         const action = edgeAction(
           boards,
-          activeBoard.id,
+          edgeBoardId,
           direction,
           allowBoardCreation && shiftPressed,
         );
