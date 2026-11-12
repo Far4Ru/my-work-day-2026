@@ -221,7 +221,6 @@ button:hover:not(:disabled) {
   font-family: "Segoe Print", "Comic Sans MS", cursive;
   font-size: 17px;
   font-weight: 800;
-  text-shadow: 0 2px 8px #071328, 0 0 14px #071328;
   transition: color 240ms ease, transform 240ms ease;
 }
 .board-grid-back:hover,
