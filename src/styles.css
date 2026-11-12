@@ -44,55 +44,24 @@ button:hover:not(:disabled) {
   top: 0;
   left: 0;
   width: 100%;
-  height: 300dvh;
+  height: 222dvh;
   pointer-events: none;
-  transform: translateY(-200dvh);
+  transform: translateY(-122dvh);
   transition: transform var(--grid-transition-duration) cubic-bezier(0.45, 0, 0.25, 1);
 }
 .board-grid-background-visible .background-track {
   transform: translateY(0);
-}
-.background-panorama-active .background-track {
-  height: 222dvh;
-  background: #315132 url("./assets/backgrounds/window-panorama-14.png") center / 100% 100% no-repeat;
-  transform: translateY(-122dvh);
-}
-.background-panorama-active.board-grid-background-visible .background-track {
-  transform: translateY(0);
-}
-.background-panorama-active .background-track > * {
-  visibility: hidden;
-}
-.desk-background,
-.window-front-background,
-.window-view-background {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 100dvh;
-}
-.desk-background {
-  top: 200dvh;
-  overflow: hidden;
 }
 .time-background {
   position: absolute;
   inset: 0;
   background-color: #202428;
   background-position: center;
-  background-size: cover;
+  background-size: 100% 100%;
   background-repeat: no-repeat;
 }
 .time-background--incoming {
   animation: reveal-background 2.4s ease-in-out both;
-}
-.window-view-background {
-  top: 100dvh;
-  background: #315132 url("./assets/backgrounds/window-view-14.png") center / cover no-repeat;
-}
-.window-front-background {
-  top: 0;
-  background: #315132 url("./assets/backgrounds/window-front-14.png") center / cover no-repeat;
 }
 @keyframes reveal-background {
   from {

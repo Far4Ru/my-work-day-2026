@@ -1,30 +1,30 @@
-import { useEffect, useLayoutEffect, useState } from "react";
-import desk00 from "./assets/backgrounds/desk-00.jpg";
-import desk02 from "./assets/backgrounds/desk-02.jpg";
-import desk04 from "./assets/backgrounds/desk-04.jpg";
-import desk06 from "./assets/backgrounds/desk-06.jpg";
-import desk08 from "./assets/backgrounds/desk-08.jpg";
-import desk10 from "./assets/backgrounds/desk-10.jpg";
-import desk12 from "./assets/backgrounds/desk-12.jpg";
-import desk14 from "./assets/backgrounds/desk-14.jpg";
-import desk16 from "./assets/backgrounds/desk-16.jpg";
-import desk18 from "./assets/backgrounds/desk-18.jpg";
-import desk20 from "./assets/backgrounds/desk-20.jpg";
-import desk22 from "./assets/backgrounds/desk-22.jpg";
+import { useEffect, useState } from "react";
+import panorama00 from "./assets/backgrounds/window-panorama-00.png";
+import panorama02 from "./assets/backgrounds/window-panorama-02.png";
+import panorama04 from "./assets/backgrounds/window-panorama-04.png";
+import panorama06 from "./assets/backgrounds/window-panorama-06.png";
+import panorama08 from "./assets/backgrounds/window-panorama-08.png";
+import panorama10 from "./assets/backgrounds/window-panorama-10.png";
+import panorama12 from "./assets/backgrounds/window-panorama-12.png";
+import panorama14 from "./assets/backgrounds/window-panorama-14.png";
+import panorama16 from "./assets/backgrounds/window-panorama-16.png";
+import panorama18 from "./assets/backgrounds/window-panorama-18.png";
+import panorama20 from "./assets/backgrounds/window-panorama-20.png";
+import panorama22 from "./assets/backgrounds/window-panorama-22.png";
 
-const backgrounds = [
-  desk00,
-  desk02,
-  desk04,
-  desk06,
-  desk08,
-  desk10,
-  desk12,
-  desk14,
-  desk16,
-  desk18,
-  desk20,
-  desk22,
+const panoramas = [
+  panorama00,
+  panorama02,
+  panorama04,
+  panorama06,
+  panorama08,
+  panorama10,
+  panorama12,
+  panorama14,
+  panorama16,
+  panorama18,
+  panorama20,
+  panorama22,
 ];
 
 function currentTimeSlot(): number {
@@ -35,15 +35,6 @@ export default function TimeOfDayBackground() {
   const [timeSlot, setTimeSlot] = useState(currentTimeSlot);
   const [visibleSlot, setVisibleSlot] = useState(timeSlot);
   const [previousSlot, setPreviousSlot] = useState<number | null>(null);
-
-  useLayoutEffect(() => {
-    const root = document.getElementById("root");
-    root?.classList.toggle("background-panorama-active", visibleSlot === 7);
-
-    return () => {
-      root?.classList.remove("background-panorama-active");
-    };
-  }, [visibleSlot]);
 
   useEffect(() => {
     const updateTimeSlot = () => setTimeSlot(currentTimeSlot());
@@ -72,7 +63,7 @@ export default function TimeOfDayBackground() {
     };
 
     image.onload = showNextBackground;
-    image.src = backgrounds[timeSlot];
+    image.src = panoramas[timeSlot];
 
     if (image.complete && image.naturalWidth > 0) {
       showNextBackground();
@@ -84,19 +75,26 @@ export default function TimeOfDayBackground() {
     };
   }, [timeSlot, visibleSlot]);
 
+  useEffect(() => {
+    if (previousSlot === null) return;
+
+    const timeout = window.setTimeout(() => setPreviousSlot(null), 2400);
+    return () => window.clearTimeout(timeout);
+  }, [previousSlot, visibleSlot]);
+
   return (
     <>
       {previousSlot !== null && (
         <div
           className="time-background"
-          style={{ backgroundImage: `url(${backgrounds[previousSlot]})` }}
+          style={{ backgroundImage: `url(${panoramas[previousSlot]})` }}
           aria-hidden="true"
         />
       )}
       <div
         key={visibleSlot}
         className={`time-background${previousSlot !== null ? " time-background--incoming" : ""}`}
-        style={{ backgroundImage: `url(${backgrounds[visibleSlot]})` }}
+        style={{ backgroundImage: `url(${panoramas[visibleSlot]})` }}
         aria-hidden="true"
       />
     </>
