@@ -1,0 +1,40 @@
+:root {
+  --grid-transition-duration: 1200ms;
+  --grid-travel: 122dvh;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color: #28342c;
+  height: 100%;
+  background: #202428 url("../assets/backgrounds/desk-12.jpg") center center /
+    cover fixed no-repeat;
+}
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  min-width: 320px;
+  margin: 0;
+  background: transparent;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+button:hover:not(:disabled) {
+  filter: brightness(0.95);
+}

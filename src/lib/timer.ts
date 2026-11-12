@@ -1,5 +1,5 @@
 import { clockTime, dateKey } from "./dates.ts";
-import type { ActiveTimer, TimeEntry } from "./model";
+import type { ActiveTimer, TimeEntry } from "../data/model";
 
 export function entriesFromTimer(
   timer: ActiveTimer,

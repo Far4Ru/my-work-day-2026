@@ -1,0 +1,144 @@
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(12px, 1.4vw, 20px);
+}
+.board-column {
+  min-width: 0;
+  min-height: 260px;
+  margin: 0;
+  padding: 19px;
+  border: 1.5px solid #59645c;
+  border-radius: 2px;
+}
+.board-column h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid #8c988e;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.status-dot {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: #7c9b8a;
+  border-radius: 50%;
+}
+.status-dot.doing {
+  background: #d3a765;
+}
+.status-dot.done {
+  background: #62a47e;
+}
+.count {
+  margin-left: auto;
+  padding: 2px 8px;
+  color: #697970;
+  background: #e8eee7;
+  border-radius: 15px;
+  font-size: 12px;
+}
+.board-add-button,
+.section-heading .board-add-button {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  margin-left: auto;
+  padding: 0;
+  color: #3f6957;
+  background: #f7f8f3;
+  border: 1px solid #aab6ad;
+  border-radius: 5px;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: 19px;
+  line-height: 1;
+}
+.board-add-button + .count {
+  margin-left: 0;
+}
+.section-heading .board-add-button {
+  margin-left: auto;
+  box-shadow: none;
+}
+.calendar-tasks-panel .section-heading,
+.calendar-unscheduled-panel .section-heading {
+  flex-wrap: wrap;
+}
+.card-stack {
+  display: grid;
+  gap: 10px;
+}
+.empty-column,
+.empty-state {
+  color: #829188;
+  font-size: 13px;
+}
+.empty-column {
+  margin: 0;
+  padding: 19px 4px;
+  text-align: center;
+}
+.calendar-heading h2 {
+  font-size: 20px;
+  text-transform: capitalize;
+}
+.calendar-heading > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.calendar-heading button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 35px;
+  padding: 6px;
+  font-size: 20px;
+  line-height: 18px;
+}
+.board-column .board-add-button,
+.calendar-page .board-add-button,
+.calendar-heading button {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+.board-column:is(:hover, :focus-within) .board-add-button,
+.calendar-page .panel:is(:hover, :focus-within) .board-add-button,
+.calendar-panel:is(:hover, :focus-within) .calendar-heading button {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (hover: none) {
+  .board-column .board-add-button,
+  .calendar-page .board-add-button,
+  .calendar-heading button {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .board-column .board-add-button,
+  .calendar-page .board-add-button,
+  .calendar-heading button {
+    transition: none;
+  }
+}
+.date-toolbar .today-button,
+.calendar-heading .today-button {
+  flex: none;
+  width: auto;
+  min-width: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 18px;
+}

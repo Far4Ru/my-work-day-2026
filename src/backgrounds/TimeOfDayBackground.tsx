@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import panorama00 from "./assets/backgrounds/window-panorama-00.png";
-import panorama02 from "./assets/backgrounds/window-panorama-02.png";
-import panorama04 from "./assets/backgrounds/window-panorama-04.png";
-import panorama06 from "./assets/backgrounds/window-panorama-06.png";
-import panorama08 from "./assets/backgrounds/window-panorama-08.png";
-import panorama10 from "./assets/backgrounds/window-panorama-10.png";
-import panorama12 from "./assets/backgrounds/window-panorama-12.png";
-import panorama14 from "./assets/backgrounds/window-panorama-14.png";
-import panorama16 from "./assets/backgrounds/window-panorama-16.png";
-import panorama18 from "./assets/backgrounds/window-panorama-18.png";
-import panorama20 from "./assets/backgrounds/window-panorama-20.png";
-import panorama22 from "./assets/backgrounds/window-panorama-22.png";
+import panorama00 from "../assets/backgrounds/window-panorama-00.png";
+import panorama02 from "../assets/backgrounds/window-panorama-02.png";
+import panorama04 from "../assets/backgrounds/window-panorama-04.png";
+import panorama06 from "../assets/backgrounds/window-panorama-06.png";
+import panorama08 from "../assets/backgrounds/window-panorama-08.png";
+import panorama10 from "../assets/backgrounds/window-panorama-10.png";
+import panorama12 from "../assets/backgrounds/window-panorama-12.png";
+import panorama14 from "../assets/backgrounds/window-panorama-14.png";
+import panorama16 from "../assets/backgrounds/window-panorama-16.png";
+import panorama18 from "../assets/backgrounds/window-panorama-18.png";
+import panorama20 from "../assets/backgrounds/window-panorama-20.png";
+import panorama22 from "../assets/backgrounds/window-panorama-22.png";
 
 const panoramas = [
   panorama00,

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { dateFromIsoWeekKey, isoWeekKey } from "../src/dates.ts";
+import { dateFromIsoWeekKey, isoWeekKey } from "../src/lib/dates.ts";
 
 test("week input uses ISO weeks across calendar-year boundaries", () => {
   assert.equal(isoWeekKey("2021-01-01"), "2020-W53");

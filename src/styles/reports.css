@@ -1,0 +1,56 @@
+.period-tabs {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+.period-tabs button {
+  padding: 9px 15px;
+  color: #627367;
+  background: #fff;
+  border: 1px solid #b9c3b8;
+  border-radius: 7px;
+  font-weight: 700;
+}
+.period-tabs button.active {
+  color: #fff;
+  background: #416b56;
+  border-color: #34563f;
+}
+.report-panel > .section-heading h2 {
+  font-size: 23px;
+  text-transform: capitalize;
+}
+.report-markdown {
+  display: block;
+  width: 100%;
+  min-height: clamp(280px, 40vh, 640px);
+  padding: 18px 20px;
+  background: #fffefa;
+  border-color: #8c988e;
+  border-radius: 2px;
+  font-family: Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre;
+}
+.statistics-page {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  align-items: start;
+  gap: 22px;
+}
+.statistics-page > .panel {
+  min-width: 0;
+  margin-bottom: 0;
+}
+.error {
+  margin-bottom: 18px;
+  padding: 13px;
+  color: #883c36;
+  background: #fff0ea;
+  border: 1px solid #d5a39a;
+  border-radius: 7px;
+}
+.loading {
+  color: #687a6c;
+}

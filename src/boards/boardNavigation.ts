@@ -1,4 +1,4 @@
-import type { Board } from "./model";
+import type { Board } from "../data/model";
 
 export type CarouselDirection = -1 | 1;
 

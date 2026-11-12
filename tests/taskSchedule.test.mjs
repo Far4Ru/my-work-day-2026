@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { scheduleTask, unscheduleTask } from "../src/taskSchedule.ts";
+import { scheduleTask, unscheduleTask } from "../src/lib/taskSchedule.ts";
 
 const task = {
   id: "task-1",

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { minutesBetweenTimes } from "../src/dates.ts";
-import { entriesFromTimer } from "../src/timer.ts";
+import { minutesBetweenTimes } from "../src/lib/dates.ts";
+import { entriesFromTimer } from "../src/lib/timer.ts";
 
 test("manual clock times require an end after the start", () => {
   assert.equal(minutesBetweenTimes("09:15", "10:45"), 90);

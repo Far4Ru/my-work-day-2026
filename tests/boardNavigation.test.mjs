@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { edgeAction } from "../src/boardNavigation.ts";
+import { edgeAction } from "../src/boards/boardNavigation.ts";
 
 const boards = [
   { id: "left", name: "Левая", position: 0 },

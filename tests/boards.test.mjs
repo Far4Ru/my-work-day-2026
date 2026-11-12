@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import "fake-indexeddb/auto";
-import { database } from "../src/database.ts";
+import { database } from "../src/data/database.ts";
 
 function openLegacyDatabase() {
   return new Promise((resolve, reject) => {
@@ -139,7 +139,11 @@ test("new boards keep tasks and timers separate without losing legacy data", asy
   ]);
   assert.deepEqual(
     reorderedBoards.map((board) => [board.id, board.position]),
-    [["second", 0], ["main", 1], ["between", 2]],
+    [
+      ["second", 0],
+      ["main", 1],
+      ["between", 2],
+    ],
   );
   assert.equal(await database.selectedBoardId(), "between");
   assert.deepEqual(

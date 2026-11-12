@@ -1,4 +1,4 @@
-import type { Task } from "./model";
+import type { Task } from "../data/model";
 
 export function scheduleTask(task: Task, date: string): Task {
   return {
