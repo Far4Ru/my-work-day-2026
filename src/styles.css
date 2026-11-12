@@ -52,6 +52,17 @@ button:hover:not(:disabled) {
 .board-grid-background-visible .background-track {
   transform: translateY(0);
 }
+.background-panorama-active .background-track {
+  height: 222dvh;
+  background: #315132 url("./assets/backgrounds/window-panorama-14.png") center / 100% 100% no-repeat;
+  transform: translateY(-122dvh);
+}
+.background-panorama-active.board-grid-background-visible .background-track {
+  transform: translateY(0);
+}
+.background-panorama-active .background-track > * {
+  visibility: hidden;
+}
 .desk-background,
 .window-front-background,
 .window-view-background {

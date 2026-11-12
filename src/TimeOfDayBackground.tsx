@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import desk00 from "./assets/backgrounds/desk-00.jpg";
 import desk02 from "./assets/backgrounds/desk-02.jpg";
 import desk04 from "./assets/backgrounds/desk-04.jpg";
@@ -35,6 +35,15 @@ export default function TimeOfDayBackground() {
   const [timeSlot, setTimeSlot] = useState(currentTimeSlot);
   const [visibleSlot, setVisibleSlot] = useState(timeSlot);
   const [previousSlot, setPreviousSlot] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const root = document.getElementById("root");
+    root?.classList.toggle("background-panorama-active", visibleSlot === 7);
+
+    return () => {
+      root?.classList.remove("background-panorama-active");
+    };
+  }, [visibleSlot]);
 
   useEffect(() => {
     const updateTimeSlot = () => setTimeSlot(currentTimeSlot());
