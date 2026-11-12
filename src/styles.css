@@ -166,38 +166,23 @@ button:hover:not(:disabled) {
   right: 10px;
   left: 10px;
   align-items: center;
-  justify-content: space-between;
   color: #52665b;
   font-size: 12px;
   font-weight: 900;
 }
-.board-grid-card-grip {
-  font-size: 20px;
-  line-height: 1;
-}
 .board-grid-card-silhouette {
-  display: grid;
+  display: block;
   position: absolute;
   inset: 0;
-  grid-template-columns: 23% repeat(2, 1fr);
-  gap: 8px;
   padding: 8px;
   background: #f9faf7;
 }
 .board-grid-card-silhouette span {
-  align-self: center;
-  height: 54%;
-  background: linear-gradient(#e1e8dd 0 10px, transparent 10px 16px, #edf1e9 16px 36px, transparent 36px);
-  border: 1px solid #aebaae;
-  border-radius: 2px;
-}
-.board-grid-card-silhouette span:first-child {
-  align-self: stretch;
-  height: auto;
+  display: block;
+  width: 23%;
+  height: 100%;
   background: #fafbf8;
-  border: 0;
   border-right: 1px solid #444d49;
-  border-radius: 0;
 }
 .board-grid-card-name {
   position: absolute;
@@ -208,8 +193,7 @@ button:hover:not(:disabled) {
   max-width: calc(100% - 20px);
   padding: 5px 9px;
   background: #f9faf7e8;
-  border: 1px solid #59645c;
-  border-radius: 3px;
+  font-family: "Segoe Print", "Comic Sans MS", cursive;
   font-size: 15px;
   font-weight: 900;
   text-align: center;

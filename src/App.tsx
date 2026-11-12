@@ -1831,13 +1831,8 @@ function BoardGrid({
               <span className="board-grid-card-number">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <span className="board-grid-card-grip" aria-hidden="true">
-                ⠿
-              </span>
             </span>
             <span className="board-grid-card-silhouette" aria-hidden="true">
-              <span />
-              <span />
               <span />
             </span>
             <span className="board-grid-card-name">{board.name}</span>
