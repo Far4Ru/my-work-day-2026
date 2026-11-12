@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   addDays,
   clockTime,
@@ -1688,6 +1688,7 @@ interface BoardGridProps {
   onClose: () => void;
   onSelect: (id: string) => void;
   onMove: (sourceId: string, targetId: string) => void;
+  onReorder: (boardIds: string[]) => void;
 }
 
 function BoardGrid({
@@ -1696,14 +1697,72 @@ function BoardGrid({
   onClose,
   onSelect,
   onMove,
+  onReorder,
 }: BoardGridProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [previewOrder, setPreviewOrder] = useState<string[] | null>(null);
+  const previewOrderRef = useRef<string[] | null>(null);
+  const previousRects = useRef<Map<string, DOMRect> | null>(null);
+  const cardElements = useRef(new Map<string, HTMLButtonElement>());
   const suppressSelection = useRef(false);
+  const boardsById = new Map(boards.map((board) => [board.id, board]));
+  const displayedBoards = previewOrder
+    ? previewOrder.map((id) => boardsById.get(id)!).filter(Boolean)
+    : boards;
+
+  useLayoutEffect(() => {
+    const before = previousRects.current;
+    previousRects.current = null;
+    if (!before || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    cardElements.current.forEach((element, id) => {
+      if (id === draggedId) return;
+      const oldRect = before.get(id);
+      if (!oldRect) return;
+      const newRect = element.getBoundingClientRect();
+      const offsetX = oldRect.left - newRect.left;
+      const offsetY = oldRect.top - newRect.top;
+      if (Math.abs(offsetX) < 1 && Math.abs(offsetY) < 1) return;
+      element.animate(
+        [
+          { transform: `translate(${offsetX}px, ${offsetY}px)` },
+          { transform: "translate(0, 0)" },
+        ],
+        { duration: 240, easing: "cubic-bezier(0.25, 0.8, 0.25, 1)" },
+      );
+    });
+  }, [previewOrder, draggedId]);
+
+  function previewMove(targetId: string) {
+    const ids = previewOrderRef.current;
+    if (!draggedId || !ids || draggedId === targetId) return;
+    const fromIndex = ids.indexOf(draggedId);
+    const toIndex = ids.indexOf(targetId);
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+
+    previousRects.current = new Map(
+      [...cardElements.current].map(([id, element]) => [
+        id,
+        element.getBoundingClientRect(),
+      ]),
+    );
+    const nextIds = [...ids];
+    nextIds.splice(fromIndex, 1);
+    nextIds.splice(toIndex, 0, draggedId);
+    previewOrderRef.current = nextIds;
+    setPreviewOrder(nextIds);
+    setDropTargetId(targetId);
+  }
 
   function finishDrag() {
     setDraggedId(null);
     setDropTargetId(null);
+    setPreviewOrder(null);
+    previewOrderRef.current = null;
+    previousRects.current = null;
     suppressSelection.current = true;
     window.setTimeout(() => {
       suppressSelection.current = false;
@@ -1713,9 +1772,13 @@ function BoardGrid({
   return (
     <>
       <div className="board-grid-list" aria-label="Порядок досок">
-        {boards.map((board, index) => (
+        {displayedBoards.map((board, index) => (
           <button
             key={board.id}
+            ref={(element) => {
+              if (element) cardElements.current.set(board.id, element);
+              else cardElements.current.delete(board.id);
+            }}
             type="button"
             className={[
               "board-grid-card",
@@ -1742,20 +1805,23 @@ function BoardGrid({
             onDragStart={(event) => {
               event.dataTransfer.effectAllowed = "move";
               event.dataTransfer.setData("text/plain", board.id);
+              const ids = boards.map((item) => item.id);
+              previewOrderRef.current = ids;
+              setPreviewOrder(ids);
               setDraggedId(board.id);
             }}
+            onDragEnter={() => previewMove(board.id)}
             onDragOver={(event) => {
-              if (draggedId && draggedId !== board.id) {
+              if (draggedId) {
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
-                setDropTargetId(board.id);
               }
             }}
             onDrop={(event) => {
               event.preventDefault();
-              const sourceId = event.dataTransfer.getData("text/plain");
-              if (sourceId && sourceId !== board.id) {
-                onMove(sourceId, board.id);
+              const ids = previewOrderRef.current;
+              if (ids && ids.some((id, position) => id !== boards[position].id)) {
+                onReorder(ids);
               }
               finishDrag();
             }}
@@ -1957,7 +2023,22 @@ function App() {
     }
   }
 
-  async function moveBoardInGrid(sourceId: string, targetId: string) {
+  async function reorderBoardsInGrid(orderedIds: string[]) {
+    const boardsById = new Map(boards.map((board) => [board.id, board]));
+    setBoards(orderedIds.map((id, position) => ({
+      ...boardsById.get(id)!,
+      position,
+    })));
+    try {
+      await database.reorderBoards(orderedIds);
+      setBoardError("");
+    } catch {
+      void database.boards().then(setBoards).catch(() => {});
+      setBoardError("Не удалось изменить порядок досок.");
+    }
+  }
+
+  function moveBoardInGrid(sourceId: string, targetId: string) {
     const fromIndex = boards.findIndex((board) => board.id === sourceId);
     const toIndex = boards.findIndex((board) => board.id === targetId);
     if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
@@ -1965,12 +2046,7 @@ function App() {
     const orderedIds = boards.map((board) => board.id);
     orderedIds.splice(fromIndex, 1);
     orderedIds.splice(toIndex, 0, sourceId);
-    try {
-      setBoards(await database.reorderBoards(orderedIds));
-      setBoardError("");
-    } catch {
-      setBoardError("Не удалось изменить порядок досок.");
-    }
+    void reorderBoardsInGrid(orderedIds);
   }
 
   async function renameBoard(id: string, name: string): Promise<boolean> {
@@ -2181,8 +2257,9 @@ function App() {
               onClose={closeBoardGrid}
               onSelect={(id) => void selectBoardFromGrid(id)}
               onMove={(sourceId, targetId) => {
-                void moveBoardInGrid(sourceId, targetId);
+                moveBoardInGrid(sourceId, targetId);
               }}
+              onReorder={(ids) => void reorderBoardsInGrid(ids)}
             />
           </div>
         )}
