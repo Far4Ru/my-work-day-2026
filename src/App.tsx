@@ -2234,10 +2234,6 @@ function App() {
 
   return (
     <>
-      <div
-        className={`window-view-background${gridPhase === "opening" || gridPhase === "open" ? " window-view-background--visible" : ""}`}
-        aria-hidden="true"
-      />
       <div className="board-carousel-stage">
         {visibleBoards.map((board) => {
           let motionClass = "";
