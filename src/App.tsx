@@ -1700,7 +1700,6 @@ function BoardGrid({
   onReorder,
 }: BoardGridProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
-  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [previewOrder, setPreviewOrder] = useState<string[] | null>(null);
   const previewOrderRef = useRef<string[] | null>(null);
   const previousRects = useRef<Map<string, DOMRect> | null>(null);
@@ -1771,12 +1770,10 @@ function BoardGrid({
     nextIds.splice(toIndex, 0, draggedId);
     previewOrderRef.current = nextIds;
     setPreviewOrder(nextIds);
-    setDropTargetId(targetId);
   }
 
   function finishDrag() {
     setDraggedId(null);
-    setDropTargetId(null);
     setPreviewOrder(null);
     previewOrderRef.current = null;
     previousRects.current = null;
@@ -1804,7 +1801,6 @@ function BoardGrid({
             className={[
               "board-grid-card",
               board.id === activeBoardId && "board-grid-card--active",
-              board.id === dropTargetId && "board-grid-card--drop-target",
               board.id === draggedId && "board-grid-card--dragged",
             ].filter(Boolean).join(" ")}
             draggable

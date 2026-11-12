@@ -150,10 +150,6 @@ button:hover:not(:disabled) {
     0 0 20px #77eaff75,
     inset 0 1px #fff;
 }
-.board-grid-card--drop-target {
-  outline: 2px dashed #b7faff;
-  outline-offset: 5px;
-}
 .board-grid-card--dragged {
   opacity: 0.45;
   cursor: grabbing;
