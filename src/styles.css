@@ -561,14 +561,12 @@ button:hover:not(:disabled) {
   padding: 8px;
   color: #263a30;
   background: #fffefa;
-  border: 1px solid #8c988e;
-  border-radius: 4px;
-  font-size: 13px;
+  border: 0;
+  border-radius: 0;
+  font-size: 16px;
   font-weight: 800;
 }
 .board-identity-row input[readonly] {
-  background: transparent;
-  border-color: transparent;
   cursor: default;
 }
 .board-identity-row button {
@@ -581,10 +579,27 @@ button:hover:not(:disabled) {
   background: #f0f4ed;
   border: 1px solid #8c988e;
   border-radius: 50%;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, visibility 0s linear 180ms;
+}
+.board-identity-row:hover button,
+.board-identity-row:focus-within button,
+.board-identity-row--editing button {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 180ms ease, visibility 0s;
 }
 .board-identity-row button .icon {
   width: 16px;
   height: 16px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .board-identity-row button {
+    transition: none;
+  }
 }
 .board-delete-area {
   margin-top: auto;
@@ -1481,6 +1496,11 @@ textarea {
 }
 
 @media (hover: none) {
+  .board-identity-row button {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
   .brand-slot {
     display: flex;
     align-items: center;

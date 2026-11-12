@@ -915,7 +915,9 @@ function BoardContent({
           </button>
         </div>
         <div className="board-identity">
-          <div className="board-identity-row">
+          <div
+            className={`board-identity-row${editingBoardName ? " board-identity-row--editing" : ""}`}
+          >
             <input
               ref={boardNameInput}
               aria-label="Название доски"
