@@ -124,6 +124,7 @@ button:hover:not(:disabled) {
 .board-grid-title {
   position: absolute;
   z-index: 1;
+  isolation: isolate;
   top: clamp(24px, 4vw, 48px);
   right: clamp(24px, 4vw, 48px);
   left: clamp(24px, 4vw, 48px);
@@ -132,11 +133,20 @@ button:hover:not(:disabled) {
   font-family: Impact, "Arial Narrow", "Arial Black", sans-serif;
   font-size: clamp(38px, 4.5vw, 60px);
   font-weight: 900;
-  letter-spacing: 0.015em;
+  letter-spacing: 0.05em;
   line-height: 1;
   text-align: left;
   text-transform: uppercase;
   pointer-events: none;
+}
+.board-grid-title::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  color: #f2d136;
+  content: attr(data-text);
+  transform: translate(5px, 5px);
 }
 .board-grid-list {
   display: grid;
