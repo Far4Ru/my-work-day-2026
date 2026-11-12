@@ -55,6 +55,8 @@ test("new boards keep tasks and timers separate without losing legacy data", asy
   await transactionDone(legacyTransaction);
   legacyConnection.close();
 
+  assert.equal(await database.initialize(), false);
+
   assert.deepEqual(await database.boards(), [
     { id: "main", name: "Моя доска", position: 0 },
   ]);

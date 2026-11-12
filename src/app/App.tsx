@@ -85,7 +85,12 @@ function App() {
   useEffect(() => {
     let cancelled = false;
 
-    void Promise.all([database.boards(), database.selectedBoardId()])
+    void database
+      .initialize()
+      .then(async (seeded) => {
+        if (seeded) setAllowBoardCreation(true);
+        return Promise.all([database.boards(), database.selectedBoardId()]);
+      })
       .then(([storedBoards, selectedId]) => {
         if (cancelled) return;
         setBoards(storedBoards);

@@ -1,4 +1,9 @@
 import type { ActiveTimer, Board, Task, TimeEntry } from "./model";
+import {
+  sampleBoards,
+  sampleSelectedBoardId,
+  sampleTasks,
+} from "./sampleData.ts";
 
 const DEFAULT_BOARD_ID = "main";
 const DATA_DATABASE_NAME = "todo-did";
@@ -54,8 +59,11 @@ function openRegistry(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => {
       const connection = request.result;
       const boards = connection.createObjectStore("boards", { keyPath: "id" });
-      connection.createObjectStore("settings", { keyPath: "id" });
+      const settings = connection.createObjectStore("settings", {
+        keyPath: "id",
+      });
       boards.put({ id: DEFAULT_BOARD_ID, name: "Моя доска", position: 0 });
+      settings.put({ id: "sampleSeed", state: "new" });
     };
 
     request.onsuccess = () => resolve(request.result);
@@ -177,6 +185,103 @@ async function readBoards(): Promise<Board[]> {
   } finally {
     connection.close();
   }
+}
+
+let initializationPromise: Promise<boolean> | null = null;
+
+function initialize(): Promise<boolean> {
+  if (!initializationPromise) {
+    initializationPromise = seedNewInstallation().catch((error) => {
+      initializationPromise = null;
+      throw error;
+    });
+  }
+  return initializationPromise;
+}
+
+async function seedNewInstallation(): Promise<boolean> {
+  const connection = await openRegistry();
+  let seedState: "new" | "seeding" | undefined;
+  try {
+    const marker = await requestResult<
+      { id: string; state: "new" | "seeding" } | undefined
+    >(
+      connection
+        .transaction("settings")
+        .objectStore("settings")
+        .get("sampleSeed"),
+    );
+    seedState = marker?.state;
+  } finally {
+    connection.close();
+  }
+
+  if (!seedState) return false;
+
+  if (seedState === "new") {
+    const [tasks, entries, timer] = await Promise.all([
+      readAll<Task>(DEFAULT_BOARD_ID, "tasks"),
+      readAll<TimeEntry>(DEFAULT_BOARD_ID, "timeEntries"),
+      forBoard(DEFAULT_BOARD_ID).activeTimer(),
+    ]);
+    if (tasks.length || entries.length || timer) {
+      const registry = await openRegistry();
+      try {
+        const transaction = registry.transaction("settings", "readwrite");
+        transaction.objectStore("settings").delete("sampleSeed");
+        await transactionDone(
+          transaction,
+          "Не удалось завершить проверку данных",
+        );
+      } finally {
+        registry.close();
+      }
+      return false;
+    }
+
+    const registry = await openRegistry();
+    try {
+      const transaction = registry.transaction("settings", "readwrite");
+      transaction.objectStore("settings").put({
+        id: "sampleSeed",
+        state: "seeding",
+      });
+      await transactionDone(transaction, "Не удалось начать создание примеров");
+    } finally {
+      registry.close();
+    }
+  }
+
+  const now = new Date();
+  for (const board of sampleBoards) {
+    const data = await openBoardData(board.id);
+    try {
+      const transaction = data.transaction("tasks", "readwrite");
+      const store = transaction.objectStore("tasks");
+      sampleTasks(board.id, now).forEach((task) => store.put(task));
+      await transactionDone(transaction, "Не удалось создать обучающие задачи");
+    } finally {
+      data.close();
+    }
+  }
+
+  const registry = await openRegistry();
+  try {
+    const transaction = registry.transaction(
+      ["boards", "settings"],
+      "readwrite",
+    );
+    const boards = transaction.objectStore("boards");
+    sampleBoards.forEach((board) => boards.put(board));
+    const settings = transaction.objectStore("settings");
+    settings.put({ id: "selection", boardId: sampleSelectedBoardId });
+    settings.delete("sampleSeed");
+    await transactionDone(transaction, "Не удалось создать стартовые доски");
+  } finally {
+    registry.close();
+  }
+
+  return true;
 }
 
 async function saveBoard(board: Board): Promise<void> {
@@ -309,6 +414,7 @@ async function saveSelectedBoardId(boardId: string): Promise<void> {
 }
 
 export const database = {
+  initialize,
   forBoard,
   boards: readBoards,
   saveBoard,
