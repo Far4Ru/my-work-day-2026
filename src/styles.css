@@ -478,8 +478,9 @@ button:hover:not(:disabled) {
   align-items: center;
   align-self: start;
   gap: 10px;
-  width: 100%;
-  padding: 0 6px 30px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0 6px;
   color: #263b31;
   background: transparent;
   border: 0;
@@ -1369,7 +1370,6 @@ textarea {
     font-size: 18px;
   }
   .brand-grid-button {
-    padding-bottom: 11px;
     font-size: 18px;
   }
   .brand-grid-icon {
@@ -1555,8 +1555,10 @@ textarea {
 
   .brand,
   .brand-grid-button {
-    padding-bottom: 64px;
     font-size: 18px;
+  }
+  .brand {
+    padding-bottom: 64px;
   }
   .board-identity {
     margin-top: -20px;
