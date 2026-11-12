@@ -190,6 +190,33 @@ async function saveBoard(board: Board): Promise<void> {
   }
 }
 
+async function reorderBoards(boardIds: string[]): Promise<Board[]> {
+  const currentBoards = await readBoards();
+  const boardsById = new Map(currentBoards.map((board) => [board.id, board]));
+  if (
+    boardIds.length !== currentBoards.length ||
+    new Set(boardIds).size !== currentBoards.length ||
+    boardIds.some((id) => !boardsById.has(id))
+  ) {
+    throw new Error("Invalid board order");
+  }
+
+  const orderedBoards = boardIds.map((id, position) => ({
+    ...boardsById.get(id)!,
+    position,
+  }));
+  const connection = await openRegistry();
+  try {
+    const transaction = connection.transaction("boards", "readwrite");
+    const store = transaction.objectStore("boards");
+    orderedBoards.forEach((board) => store.put(board));
+    await transactionDone(transaction, "Не удалось изменить порядок досок");
+    return orderedBoards;
+  } finally {
+    connection.close();
+  }
+}
+
 async function insertBoard(board: Board, index: number): Promise<Board[]> {
   const currentBoards = await readBoards();
   const orderedBoards = [...currentBoards];
@@ -285,6 +312,7 @@ export const database = {
   forBoard,
   boards: readBoards,
   saveBoard,
+  reorderBoards,
   insertBoard,
   deleteBoard,
   selectedBoardId,

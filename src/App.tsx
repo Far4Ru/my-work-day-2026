@@ -105,12 +105,14 @@ interface BoardContentProps {
   board: Board;
   onRenameBoard: (id: string, name: string) => Promise<boolean>;
   onDeleteBoard: (id: string) => Promise<boolean>;
+  onOpenBoardGrid: () => void;
 }
 
 function BoardContent({
   board,
   onRenameBoard,
   onDeleteBoard,
+  onOpenBoardGrid,
 }: BoardContentProps) {
   const boardDatabase = useMemo(() => database.forBoard(board.id), [board.id]);
   const [boardNameDraft, setBoardNameDraft] = useState(board.name);
@@ -886,16 +888,26 @@ function BoardContent({
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">
-          <img
-            className="brand-mark"
-            src={`${import.meta.env.BASE_URL}icons/logo.svg`}
-            alt=""
-            aria-hidden="true"
-          />
-          <span>
-            My Work Day<small>Личный рабочий день</small>
-          </span>
+        <div className="brand-slot">
+          <div className="brand" tabIndex={0}>
+            <img
+              className="brand-mark"
+              src={`${import.meta.env.BASE_URL}icons/logo.svg`}
+              alt=""
+              aria-hidden="true"
+            />
+            <span>
+              My Work Day<small>Личный рабочий день</small>
+            </span>
+          </div>
+          <button
+            className="brand-grid-button"
+            type="button"
+            onClick={onOpenBoardGrid}
+          >
+            <span className="brand-grid-icon" aria-hidden="true" />
+            Все доски
+          </button>
         </div>
         <div className="board-identity">
           <div className="board-identity-row">
@@ -1670,6 +1682,120 @@ function BoardContent({
   );
 }
 
+interface BoardGridProps {
+  boards: Board[];
+  activeBoardId: string;
+  onClose: () => void;
+  onSelect: (id: string) => void;
+  onMove: (sourceId: string, targetId: string) => void;
+}
+
+function BoardGrid({
+  boards,
+  activeBoardId,
+  onClose,
+  onSelect,
+  onMove,
+}: BoardGridProps) {
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const suppressSelection = useRef(false);
+
+  function finishDrag() {
+    setDraggedId(null);
+    setDropTargetId(null);
+    suppressSelection.current = true;
+    window.setTimeout(() => {
+      suppressSelection.current = false;
+    }, 0);
+  }
+
+  return (
+    <div className="app-shell board-grid-shell">
+      <header className="board-grid-header">
+        <div>
+          <span className="board-grid-eyebrow">My Work Day</span>
+          <h1>Все доски</h1>
+          <p>Перетащите панели, чтобы изменить порядок досок.</p>
+        </div>
+        <button type="button" onClick={onClose}>
+          <Icon name="close" />
+          Вернуться к доске
+        </button>
+      </header>
+      <div className="board-grid-list" aria-label="Порядок досок">
+        {boards.map((board, index) => (
+          <button
+            key={board.id}
+            type="button"
+            className={[
+              "board-grid-card",
+              board.id === activeBoardId && "board-grid-card--active",
+              board.id === dropTargetId && "board-grid-card--drop-target",
+              board.id === draggedId && "board-grid-card--dragged",
+            ].filter(Boolean).join(" ")}
+            draggable
+            aria-label={`${board.name}, позиция ${index + 1} из ${boards.length}. Открыть доску или переместить стрелками.`}
+            onClick={() => {
+              if (!suppressSelection.current) onSelect(board.id);
+            }}
+            onKeyDown={(event) => {
+              const offset =
+                event.key === "ArrowLeft" || event.key === "ArrowUp"
+                  ? -1
+                  : event.key === "ArrowRight" || event.key === "ArrowDown"
+                    ? 1
+                    : 0;
+              if (!offset || !boards[index + offset]) return;
+              event.preventDefault();
+              onMove(board.id, boards[index + offset].id);
+            }}
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData("text/plain", board.id);
+              setDraggedId(board.id);
+            }}
+            onDragOver={(event) => {
+              if (draggedId && draggedId !== board.id) {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+                setDropTargetId(board.id);
+              }
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              const sourceId = event.dataTransfer.getData("text/plain");
+              if (sourceId && sourceId !== board.id) {
+                onMove(sourceId, board.id);
+              }
+              finishDrag();
+            }}
+            onDragEnd={finishDrag}
+          >
+            <span className="board-grid-card-top">
+              <span className="board-grid-card-number">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="board-grid-card-grip" aria-hidden="true">
+                ⠿
+              </span>
+            </span>
+            <span className="board-grid-card-silhouette" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+            <span className="board-grid-card-name">{board.name}</span>
+            {board.id === activeBoardId && (
+              <span className="board-grid-card-current">Текущая</span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface BoardTransition {
   fromId: string;
   toId: string;
@@ -1681,6 +1807,9 @@ function App() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
   const [transition, setTransition] = useState<BoardTransition | null>(null);
+  const [gridPhase, setGridPhase] = useState<
+    "closed" | "opening" | "open" | "closing"
+  >("closed");
   const [boardError, setBoardError] = useState("");
   const [shiftPressed, setShiftPressed] = useState(false);
   const navigating = useRef(false);
@@ -1766,6 +1895,90 @@ function App() {
 
     return () => window.clearTimeout(timeout);
   }, [transition]);
+
+  useEffect(() => {
+    if (gridPhase !== "opening") return;
+
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => setGridPhase("open"));
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [gridPhase]);
+
+  useEffect(() => {
+    if (gridPhase !== "closing") return;
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const timeout = window.setTimeout(() => {
+      setGridPhase("closed");
+      navigating.current = false;
+    }, reducedMotion ? 0 : 920);
+    return () => window.clearTimeout(timeout);
+  }, [gridPhase]);
+
+  useEffect(() => {
+    if (gridPhase !== "open") return;
+
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeBoardGrid();
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [gridPhase]);
+
+  function openBoardGrid() {
+    if (navigating.current || gridPhase !== "closed") return;
+    navigating.current = true;
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setGridPhase("opening");
+  }
+
+  function closeBoardGrid() {
+    if (gridPhase !== "open") return;
+    setGridPhase("closing");
+  }
+
+  async function selectBoardFromGrid(id: string) {
+    if (gridPhase !== "open") return;
+    if (id === activeBoardId) {
+      closeBoardGrid();
+      return;
+    }
+    try {
+      await database.saveSelectedBoardId(id);
+      setActiveBoardId(id);
+      setBoardError("");
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => setGridPhase("closing"));
+      });
+    } catch {
+      setBoardError("Не удалось открыть доску.");
+    }
+  }
+
+  async function moveBoardInGrid(sourceId: string, targetId: string) {
+    const fromIndex = boards.findIndex((board) => board.id === sourceId);
+    const toIndex = boards.findIndex((board) => board.id === targetId);
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+
+    const orderedIds = boards.map((board) => board.id);
+    orderedIds.splice(fromIndex, 1);
+    orderedIds.splice(toIndex, 0, sourceId);
+    try {
+      setBoards(await database.reorderBoards(orderedIds));
+      setBoardError("");
+    } catch {
+      setBoardError("Не удалось изменить порядок досок.");
+    }
+  }
 
   async function renameBoard(id: string, name: string): Promise<boolean> {
     const board = boards.find((item) => item.id === id);
@@ -1945,24 +2158,44 @@ function App() {
                 ? "board-slide--right"
                 : "board-slide--left";
           }
+          if (gridPhase === "open") {
+            motionClass = "board-slide--grid-hidden";
+          }
 
           return (
             <div
               key={board.id}
               className={`board-slide ${motionClass}`}
-              inert={transition !== null}
+              inert={transition !== null || gridPhase !== "closed"}
             >
               <BoardContent
                 board={board}
                 onRenameBoard={renameBoard}
                 onDeleteBoard={removeBoard}
+                onOpenBoardGrid={openBoardGrid}
               />
             </div>
           );
         })}
+        {gridPhase !== "closed" && (
+          <div
+            className={`board-grid-screen${gridPhase === "open" ? " board-grid-screen--visible" : ""}`}
+            inert={gridPhase !== "open"}
+          >
+            <BoardGrid
+              boards={boards}
+              activeBoardId={activeBoard.id}
+              onClose={closeBoardGrid}
+              onSelect={(id) => void selectBoardFromGrid(id)}
+              onMove={(sourceId, targetId) => {
+                void moveBoardInGrid(sourceId, targetId);
+              }}
+            />
+          </div>
+        )}
       </div>
 
-      {([-1, 1] as const).map((direction) => {
+      {gridPhase === "closed" && ([-1, 1] as const).map((direction) => {
         const isLeft = direction === -1;
         const action = edgeAction(
           boards,

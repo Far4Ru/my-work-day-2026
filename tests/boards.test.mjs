@@ -127,6 +127,27 @@ test("new boards keep tasks and timers separate without losing legacy data", asy
   );
   assert.equal(await database.selectedBoardId(), "between");
 
+  await assert.rejects(database.reorderBoards(["main", "main", "second"]));
+  assert.deepEqual(
+    (await database.boards()).map((board) => board.id),
+    ["main", "between", "second"],
+  );
+  const reorderedBoards = await database.reorderBoards([
+    "second",
+    "main",
+    "between",
+  ]);
+  assert.deepEqual(
+    reorderedBoards.map((board) => [board.id, board.position]),
+    [["second", 0], ["main", 1], ["between", 2]],
+  );
+  assert.equal(await database.selectedBoardId(), "between");
+  assert.deepEqual(
+    (await database.boards()).map((board) => board.id),
+    ["second", "main", "between"],
+  );
+  await database.reorderBoards(["main", "between", "second"]);
+
   await database.deleteBoard("between", "main");
   assert.equal(await database.selectedBoardId(), "main");
   assert.deepEqual(
