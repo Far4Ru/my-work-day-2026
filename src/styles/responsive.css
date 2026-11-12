@@ -451,3 +451,9 @@
       clamp(50px, 6vh, 72px);
   }
 }
+
+@media (min-width: 1700px) and (min-height: 900px) {
+  .board-grid-add-toggle {
+    top: 180px;
+  }
+}
