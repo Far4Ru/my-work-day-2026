@@ -170,13 +170,47 @@ button:hover:not(:disabled) {
   opacity: 1;
 }
 .board-grid-add-toggle input {
+  appearance: none;
+  display: grid;
   flex: none;
-  width: 18px;
-  height: 18px;
+  place-items: center;
+  width: 22px;
+  height: 22px;
   margin: 0;
   padding: 0;
-  accent-color: #263b31;
+  background: #e6e0c526;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  outline: none;
   cursor: pointer;
+  transform: rotate(-3deg);
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+.board-grid-add-toggle input::after {
+  width: 12px;
+  height: 7px;
+  margin-top: -3px;
+  border-bottom: 3px solid currentColor;
+  border-left: 3px solid currentColor;
+  content: "";
+  opacity: 0;
+  transform: rotate(-45deg) scale(0.7);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.board-grid-add-toggle input:checked {
+  background: #e6df3240;
+}
+.board-grid-add-toggle input:checked::after {
+  opacity: 1;
+  transform: rotate(-45deg) scale(1);
+}
+.board-grid-add-toggle input:focus {
+  border-color: currentColor;
+  box-shadow: none;
+}
+.board-grid-add-toggle input:focus-visible {
+  outline: 2px solid #17211d;
+  outline-offset: 4px;
 }
 .board-grid-list {
   display: grid;
@@ -412,6 +446,8 @@ button:hover:not(:disabled) {
   .board-slide,
   .board-grid-screen,
   .board-grid-add-toggle,
+  .board-grid-add-toggle input,
+  .board-grid-add-toggle input::after,
   .board-grid-card,
   .board-grid-back,
   .board-grid-back-label::after,
