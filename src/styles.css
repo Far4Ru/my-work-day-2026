@@ -144,9 +144,9 @@ button:hover:not(:disabled) {
   z-index: -1;
   top: 0;
   left: 0;
-  color: #f2d136;
+  color: #e6df32;
   content: attr(data-text);
-  transform: translate(5px, 5px);
+  transform: translate(10px, -5px);
 }
 .board-grid-list {
   display: grid;
