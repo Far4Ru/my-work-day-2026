@@ -1705,6 +1705,7 @@ function BoardGrid({
   const previewOrderRef = useRef<string[] | null>(null);
   const previousRects = useRef<Map<string, DOMRect> | null>(null);
   const cardElements = useRef(new Map<string, HTMLButtonElement>());
+  const listElement = useRef<HTMLDivElement>(null);
   const suppressSelection = useRef(false);
   const boardsById = new Map(boards.map((board) => [board.id, board]));
   const displayedBoards = previewOrder
@@ -1736,9 +1737,25 @@ function BoardGrid({
     });
   }, [previewOrder, draggedId]);
 
-  function previewMove(targetId: string) {
+  function previewMove(targetId: string, pointerX: number, pointerY: number) {
     const ids = previewOrderRef.current;
     if (!draggedId || !ids || draggedId === targetId) return;
+    const list = listElement.current;
+    const target = cardElements.current.get(targetId);
+    if (!list || !target) return;
+
+    const listRect = list.getBoundingClientRect();
+    const targetLeft = listRect.left + target.offsetLeft - list.scrollLeft;
+    const targetTop = listRect.top + target.offsetTop - list.scrollTop;
+    if (
+      pointerX < targetLeft ||
+      pointerX > targetLeft + target.offsetWidth ||
+      pointerY < targetTop ||
+      pointerY > targetTop + target.offsetHeight
+    ) {
+      return;
+    }
+
     const fromIndex = ids.indexOf(draggedId);
     const toIndex = ids.indexOf(targetId);
     if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
@@ -1771,7 +1788,11 @@ function BoardGrid({
 
   return (
     <>
-      <div className="board-grid-list" aria-label="Порядок досок">
+      <div
+        ref={listElement}
+        className="board-grid-list"
+        aria-label="Порядок досок"
+      >
         {displayedBoards.map((board, index) => (
           <button
             key={board.id}
@@ -1810,7 +1831,9 @@ function BoardGrid({
               setPreviewOrder(ids);
               setDraggedId(board.id);
             }}
-            onDragEnter={() => previewMove(board.id)}
+            onDragEnter={(event) => {
+              previewMove(board.id, event.clientX, event.clientY);
+            }}
             onDragOver={(event) => {
               if (draggedId) {
                 event.preventDefault();
