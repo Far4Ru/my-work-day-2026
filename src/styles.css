@@ -50,6 +50,18 @@ button:hover:not(:disabled) {
 .time-background--incoming {
   animation: reveal-background 2.4s ease-in-out both;
 }
+.window-view-background {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  background: #315132 url("./assets/backgrounds/window-view-14.png") center / cover no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 900ms ease-in-out;
+}
+.window-view-background--visible {
+  opacity: 1;
+}
 @keyframes reveal-background {
   from {
     opacity: 0;
@@ -61,6 +73,9 @@ button:hover:not(:disabled) {
 @media (prefers-reduced-motion: reduce) {
   .time-background--incoming {
     animation: none;
+  }
+  .window-view-background {
+    transition: none;
   }
 }
 
