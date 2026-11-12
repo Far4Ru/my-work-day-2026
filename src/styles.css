@@ -173,11 +173,6 @@ button:hover:not(:disabled) {
   border-radius: 12px;
   text-align: left;
   cursor: grab;
-  transition: transform 240ms ease;
-}
-.board-grid-card:hover,
-.board-grid-card:focus-visible {
-  transform: translateY(-4px);
 }
 .board-grid-card--dragged {
   opacity: 0.45;
