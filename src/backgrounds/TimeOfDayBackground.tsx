@@ -37,6 +37,26 @@ export default function TimeOfDayBackground() {
   const [previousSlot, setPreviousSlot] = useState<number | null>(null);
 
   useEffect(() => {
+    let resizeTimeout: number;
+
+    const handleResize = () => {
+      document.documentElement.classList.add("viewport-resizing");
+      window.clearTimeout(resizeTimeout);
+      resizeTimeout = window.setTimeout(() => {
+        document.documentElement.classList.remove("viewport-resizing");
+      }, 200);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.clearTimeout(resizeTimeout);
+      document.documentElement.classList.remove("viewport-resizing");
+    };
+  }, []);
+
+  useEffect(() => {
     const updateTimeSlot = () => setTimeSlot(currentTimeSlot());
     const interval = window.setInterval(updateTimeSlot, 30_000);
 

@@ -13,6 +13,9 @@
 .board-grid-background-visible .background-track {
   transform: translateY(0);
 }
+.viewport-resizing .background-track {
+  transition: none;
+}
 .time-background {
   position: absolute;
   inset: 0;

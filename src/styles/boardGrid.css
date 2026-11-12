@@ -39,6 +39,10 @@
 .board-grid-screen--visible {
   transform: translate(-50%, 0);
 }
+.viewport-resizing .board-slide--grid-transition,
+.viewport-resizing .board-grid-screen {
+  transition: none;
+}
 .board-grid-title {
   position: absolute;
   z-index: 1;
