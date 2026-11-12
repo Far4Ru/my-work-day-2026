@@ -7,6 +7,7 @@ import "./styles.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <div className="background-track" aria-hidden="true">
+      <div className="window-front-background" />
       <div className="window-view-background" />
       <div className="desk-background">
         <TimeOfDayBackground />

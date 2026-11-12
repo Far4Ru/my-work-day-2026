@@ -1999,7 +1999,7 @@ function App() {
     const timeout = window.setTimeout(() => {
       setGridPhase("closed");
       navigating.current = false;
-    }, reducedMotion ? 0 : 920);
+    }, reducedMotion ? 0 : 1220);
     return () => window.clearTimeout(timeout);
   }, [gridPhase]);
 
@@ -2231,6 +2231,9 @@ function App() {
         boards.find((board) => board.id === transition.toId),
       ].filter((board): board is Board => board !== undefined)
     : [activeBoard];
+  const gridMotionClass = gridPhase === "closed"
+    ? ""
+    : " board-slide--grid-transition";
 
   return (
     <>
@@ -2256,7 +2259,7 @@ function App() {
           return (
             <div
               key={board.id}
-              className={`board-slide ${motionClass}`}
+              className={`board-slide ${motionClass}${gridMotionClass}`}
               inert={transition !== null || gridPhase !== "closed"}
             >
               <BoardContent
