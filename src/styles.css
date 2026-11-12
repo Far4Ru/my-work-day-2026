@@ -512,9 +512,6 @@ button:hover:not(:disabled) {
   border: 2px solid #252a2d;
   border-radius: 3px;
 }
-.brand-grid-label {
-  min-height: 38px;
-}
 .brand-slot:focus-within > .brand,
 .brand-slot:hover > .brand {
   opacity: 0;
@@ -1378,9 +1375,6 @@ textarea {
   .brand-grid-icon {
     width: 31px;
     height: 31px;
-  }
-  .brand-grid-label {
-    min-height: 0;
   }
   .board-grid-list {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
