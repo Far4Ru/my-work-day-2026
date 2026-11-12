@@ -1864,7 +1864,7 @@ function BoardGrid({
       </div>
       <button className="board-grid-back" type="button" onClick={onClose}>
         <Icon name="arrow-left" />
-        Вернуться к доске
+        <span className="board-grid-back-label">Вернуться к доске</span>
       </button>
     </>
   );
