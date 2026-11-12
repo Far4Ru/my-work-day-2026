@@ -905,8 +905,13 @@ function BoardContent({
             type="button"
             onClick={onOpenBoardGrid}
           >
-            <span className="brand-grid-icon" aria-hidden="true" />
-            Все доски
+            <span className="brand-grid-icon" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </span>
+            <span className="brand-grid-label">Все доски</span>
           </button>
         </div>
         <div className="board-identity">
